@@ -14,7 +14,7 @@
 :root{
   --paper:#F6F8FC; --grid:rgba(31,56,100,.075); --surface:#FFFFFF; --line:#D8DFEB;
   --ink:#14213D; --ink-soft:#4B5873; --navy:#1F3864; --on-navy:#FFFFFF;
-  --marker:#FFD23F; --tag:#E8EEF8; --ok:#1E7A4E;
+  --marker:#FFD23F; --tag:#E8EEF8; --ok:#1E7A4E; --gold:#E3B23C; --gold-ink:#2B1E00;
   --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -23,11 +23,11 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --paper:#0D1425; --grid:rgba(150,178,235,.07); --surface:#151F38; --line:#2A3657;
   --ink:#E7ECF6; --ink-soft:#A4B0C7; --navy:#93B3F2; --on-navy:#0D1425;
-  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; color-scheme:dark; } }
+  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; --gold:#D9A93A; --gold-ink:#1A1200; color-scheme:dark; } }
 :root[data-theme="dark"]{
   --paper:#0D1425; --grid:rgba(150,178,235,.07); --surface:#151F38; --line:#2A3657;
   --ink:#E7ECF6; --ink-soft:#A4B0C7; --navy:#93B3F2; --on-navy:#0D1425;
-  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; color-scheme:dark; }
+  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; --gold:#D9A93A; --gold-ink:#1A1200; color-scheme:dark; }
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -125,6 +125,13 @@ section.band{padding-block:56px}
 .class li:last-child{border-bottom:0}
 .class li span:last-child{font-family:var(--f-mono);font-size:.75rem;color:var(--ink-soft);white-space:nowrap}
 .class .soon{padding:20px;color:var(--ink-soft)}
+.class .top.ug{background:var(--gold);color:var(--gold-ink)}
+.class .top .prog{font-size:.9rem;margin-top:6px;opacity:.9}
+.class li a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.class li a:hover{text-decoration-color:var(--navy)}
+.class-ctrl{margin-bottom:20px}
+.calframe{width:100%;height:320px;border:1px solid var(--line);border-radius:10px;margin-top:14px;background:var(--paper)}
+a.open{display:inline-block}
 .pill{display:inline-block;font-family:var(--f-mono);font-size:.72rem;padding:3px 9px;border-radius:99px;border:1px solid currentColor}
 
 /* Horario */
@@ -243,29 +250,8 @@ Carlos Díaz</textarea>
           <p>Busca tu materia y entra directo a sus actividades.</p>
         </div>
       </div>
-      <div class="classes">
-        <article class="class">
-          <div class="top"><span class="eyebrow">Materia</span><h3>Métodos cualitativos</h3></div>
-          <ul>
-            <li><span>Explicar y comprender · trivia</span><span>15 preguntas</span></li>
-            <li><span>SciELO</span><span>buscador</span></li>
-            <li><span>Google Académico</span><span>buscador</span></li>
-            <li><span>Consensus</span><span>IA</span></li>
-            <li><span>Complemento de IA de Google</span><span>IA</span></li>
-          </ul>
-        </article>
-        <article class="class">
-          <div class="top"><span class="eyebrow">Materia</span><h3>Desarrollo, aprendizaje y educación</h3></div>
-          <ul>
-            <li><span>Crucigrama: etapas psicosociales de Erikson</span><span>juego</span></li>
-            <li><span>Trivia de Erik Erikson</span><span>20 preguntas</span></li>
-          </ul>
-        </article>
-        <article class="class">
-          <div class="top"><span class="eyebrow">Materia</span><h3>Comunicación en los procesos educativos</h3></div>
-          <p class="soon"><span class="pill">en preparación</span><br><br>Pronto encontrarás aquí las actividades de esta materia.</p>
-        </article>
-      </div>
+      <div class="chips class-ctrl" role="group" aria-label="Filtrar materias" id="classChips"></div>
+      <div class="classes" id="classList"></div>
     </div>
   </section>
 
@@ -276,7 +262,8 @@ Carlos Díaz</textarea>
         <div class="panel">
           <h3>Esta semana</h3>
           <div class="week" id="week"></div>
-          <div class="cal">Aquí se mostrará tu Google Calendar con entregas y fechas importantes.</div>
+          <iframe class="calframe" title="Calendario de la clase" loading="lazy" src="https://calendar.google.com/calendar/embed?src=c_classroom5063ffc0%40group.calendar.google.com&amp;ctz=America%2FMexico_City&amp;mode=AGENDA&amp;showPrint=0&amp;showTz=0&amp;showCalendars=0&amp;showTitle=0"></iframe>
+          <p class="small" style="margin-top:8px">Si no ves las fechas, inicia sesión con tu cuenta institucional de Google. · <a href="https://www.google.com/maps/search/?api=1&amp;query=20.536923,-100.808851" target="_blank" rel="noopener">Cómo llegar a la UPN 112</a></p>
         </div>
         <div class="panel">
           <h3>¿Qué opinas de la materia?</h3>
@@ -366,16 +353,16 @@ Carlos Díaz</textarea>
     ticket:'<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M13 6v12" stroke-dasharray="2 2"/>'
   };
   const tools=[
-    {n:'Generador de equipos',d:'Pega la lista del grupo y forma equipos aleatorios en un clic.',t:'Sorteos y equipos',i:'team'},
-    {n:'Ruleta de selección',d:'Gira la ruleta para elegir quién participa o qué tema sigue.',t:'Sorteos y equipos',i:'wheel'},
-    {n:'Carrera de números',d:'Hasta 10 autos compiten; en 10 segundos sabes el orden de exposición.',t:'Sorteos y equipos',i:'flag'},
-    {n:'Memorama de Pedagogía',d:'Encuentra los pares de conceptos y autores.',t:'Juegos',i:'cards'},
-    {n:'Cada animal a su hogar',d:'Arrastra cada animal a su lugar en la granja y valida tus respuestas.',t:'Juegos',i:'drag'},
-    {n:'Crucigrama de Erikson',d:'Las etapas psicosociales en un crucigrama jugable en celular.',t:'Juegos',i:'grid'},
-    {n:'Trivia: Explicar y comprender',d:'15 preguntas de investigación científica, con puntos extra por rapidez.',t:'Trivias',i:'quiz'},
-    {n:'Trivia de Erik Erikson',d:'20 preguntas de opción múltiple, verdadero o falso y relación de conceptos.',t:'Trivias',i:'quiz'},
-    {n:'Nube de Ideas',d:'Cada alumno envía palabras y la nube crece en vivo en el proyector.',t:'Participación',i:'cloud'},
-    {n:'Boleto de salida',d:'Al final de la clase, cada alumno deja su reflexión entrando por QR.',t:'Participación',i:'ticket'}
+    {n:'Generador de equipos',h:'herramientas/generador-equipos.html',d:'Pega la lista del grupo y forma equipos aleatorios en un clic.',t:'Sorteos y equipos',i:'team'},
+    {n:'Ruleta de selección',h:'herramientas/ruleta.html',d:'Gira la ruleta para elegir quién participa o qué tema sigue.',t:'Sorteos y equipos',i:'wheel'},
+    {n:'Carrera de números',h:'herramientas/carrera-numeros.html',d:'Hasta 10 autos compiten; en 10 segundos sabes el orden de exposición.',t:'Sorteos y equipos',i:'flag'},
+    {n:'Memorama de Pedagogía',h:'herramientas/memorama-pedagogia.html',d:'Encuentra los pares de conceptos y autores.',t:'Juegos',i:'cards'},
+    {n:'Cada animal a su hogar',h:'herramientas/granja.html',d:'Arrastra cada animal a su lugar en la granja y valida tus respuestas.',t:'Juegos',i:'drag'},
+    {n:'Crucigrama de Erikson',h:'herramientas/crucigrama-erikson.html',d:'Las etapas psicosociales en un crucigrama jugable en celular.',t:'Juegos',i:'grid'},
+    {n:'Trivia: Explicar y comprender',h:'herramientas/trivia-explicar-comprender.html',d:'15 preguntas de investigación científica, con puntos extra por rapidez.',t:'Trivias',i:'quiz'},
+    {n:'Trivia de Erik Erikson',h:'herramientas/trivia-erikson.html',d:'20 preguntas de opción múltiple, verdadero o falso y relación de conceptos.',t:'Trivias',i:'quiz'},
+    {n:'Nube de Ideas',h:'https://psicmarcorl.github.io/Herramientas-didacticas/',d:'Cada alumno envía palabras y la nube crece en vivo en el proyector.',t:'Participación',i:'cloud'},
+    {n:'Boleto de salida',h:'https://psicmarcorl.github.io/Herramientas-didacticas/',d:'Al final de la clase, cada alumno deja su reflexión entrando por QR.',t:'Participación',i:'ticket'}
   ];
   const cats=['Todas',...new Set(tools.map(x=>x.t))]; let cat='Todas';
   const chips=$('#chips');
@@ -384,10 +371,40 @@ Carlos Díaz</textarea>
   function render(){
     const q=norm($('#q').value.trim());
     const list=tools.filter(x=>(cat==='Todas'||x.t===cat)&&(!q||norm(x.n+' '+x.d).includes(q)));
-    $('#tools').innerHTML=list.length?list.map(x=>`<article class="tool"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[x.i]}</svg></div><h3>${x.n}</h3><p>${x.d}</p><div class="meta"><span class="tag">${x.t}</span><button class="open" type="button" data-n="${x.n}">Abrir</button></div></article>`).join(''):'<div class="empty">No encontré herramientas con ese nombre. Prueba con otra palabra.</div>';
+    $('#tools').innerHTML=list.length?list.map(x=>`<article class="tool"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[x.i]}</svg></div><h3>${x.n}</h3><p>${x.d}</p><div class="meta"><span class="tag">${x.t}</span><a class="open" href="${x.h}"${/^https?:/.test(x.h)?' target="_blank" rel="noopener"':''}>Abrir</a></div></article>`).join(''):'<div class="empty">No encontré herramientas con ese nombre. Prueba con otra palabra.</div>';
   }
   $('#q').addEventListener('input',render); render();
-  $('#tools').addEventListener('click',e=>{const b=e.target.closest('.open');if(b)toast(`En el sitio final, aquí se abrirá «${b.dataset.n}»`)});
+
+  // Clases
+  const H='herramientas/';
+  const classes=[
+    {n:'Procesos psicosociales del rendimiento académico',p:'Lic. en Psicología Educativa',u:'UPN',now:true,items:[]},
+    {n:'Cultura, comunicación y educación',p:'Lic. en Pedagogía · Lic. en Intervención Educativa',u:'UPN',now:true,items:[]},
+    {n:'Jóvenes, violencia y convivencialidad',p:'Lic. en Pedagogía',u:'UPN',now:true,items:[{t:'Feria por la eliminación de la violencia',m:'25 de noviembre'}]},
+    {n:'Interculturalidad, comunicación y educación',p:'Lic. en Intervención Educativa',u:'UPN',now:true,items:[]},
+    {n:'Teoría de la Medida',p:'Psicología Clínica',u:'UG',now:true,items:[]},
+    {n:'Tecnología Aplicada a la Psicología',p:'Psicología Clínica',u:'UG',now:true,items:[]},
+    {n:'Métodos cualitativos',p:'Semestre anterior',u:'UPN',now:false,items:[
+      {t:'Explicar y comprender · trivia',m:'15 preguntas',h:H+'trivia-explicar-comprender.html'},
+      {t:'SciELO',m:'buscador',h:'https://scielo.org/es/'},
+      {t:'Google Académico',m:'buscador',h:'https://scholar.google.com/'},
+      {t:'Consensus',m:'IA',h:'https://consensus.app/'},
+      {t:'Complemento de IA de Google Académico',m:'IA',h:'https://scholar.google.com/scholar_settings?sciifh=1&hl=es&as_sdt=0,5#4'}]},
+    {n:'Desarrollo, aprendizaje y educación',p:'Semestre anterior',u:'UPN',now:false,items:[
+      {t:'Crucigrama: etapas psicosociales de Erikson',m:'juego',h:H+'crucigrama-erikson.html'},
+      {t:'Trivia de Erik Erikson',m:'20 preguntas',h:H+'trivia-erikson.html'}]},
+    {n:'Comunicación en los procesos educativos',p:'Semestre anterior',u:'UPN',now:false,items:[]}
+  ];
+  const uni={UPN:'UPN Unidad 112',UG:'Universidad de Guanajuato'};
+  const cf=[['now','Este semestre'],['old','Semestres anteriores'],['all','Todas']]; let cv='now';
+  const cc=$('#classChips');
+  cf.forEach(([v,l])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=l;b.setAttribute('aria-pressed',v===cv);b.onclick=()=>{cv=v;cc.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));renderClasses()};cc.appendChild(b)});
+  const ext=h=>/^https?:/.test(h)?' target="_blank" rel="noopener"':'';
+  function renderClasses(){
+    const list=classes.filter(c=>cv==='all'||(cv==='now')===c.now);
+    $('#classList').innerHTML=list.map(c=>`<article class="class"><div class="top${c.u==='UG'?' ug':''}"><span class="eyebrow">${uni[c.u]}</span><h3>${c.n}</h3><p class="prog">${c.p}</p></div>${c.items.length?`<ul>${c.items.map(i=>`<li><span>${i.h?`<a href="${i.h}"${ext(i.h)}>${i.t}</a>`:i.t}</span><span>${i.m}</span></li>`).join('')}</ul>`:`<p class="soon"><span class="pill">en preparación</span><br><br>Pronto encontrarás aquí las actividades de esta materia.</p>`}</article>`).join('');
+  }
+  renderClasses();
 
   // Semana
   const days=['Lun','Mar','Mié','Jue','Vie'],slots={2:'9:00–11:00',4:'7:00–8:00'};

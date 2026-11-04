@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de la Granja Interactivo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.dragging { opacity: 0.5; cursor: grabbing; transform: scale(1.1); }
+.drag-over { border-style: solid; border-color: #9ca3af; /* gray-400 */ background-color: #f3f4f6; /* gray-100 */ } /* Cambiado a un gris neutral */
+.habitat { transition: all 0.2s ease-in-out; }
+.animal-emoji { font-size: 4rem; line-height: 1; user-select: none; }
+body { font-family: 'Inter', sans-serif; background-color: #f0f9ff; }
+
+/* Nuevos estilos para validación */
+.habitat.valid-placement { border-color: #22c55e; /* green-500 */ background-color: #dcfce7; /* green-100 */ border-style: solid; }
+.habitat.invalid-placement { border-color: #ef4444; /* red-500 */ background-color: #fee2e2; /* red-100 */ border-style: solid; }
+
+/* Estilos para el confeti */
+.confetti-container {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+overflow: hidden;
+z-index: 9999;
+}
+.confetti {
+position: absolute;
+width: 10px;
+height: 10px;
+background-color: #f00; /* Default red */
+opacity: 0;
+animation: confetti-fall linear infinite;
+}
+/* Colores de confeti */
+.confetti:nth-child(3n+0) { background-color: #f00; } /* red */
+.confetti:nth-child(3n+1) { background-color: #0f0; } /* green */
+.confetti:nth-child(3n+2) { background-color: #00f; } /* blue */
+
+@keyframes confetti-fall {
+0% { transform: translateY(-100px) rotateZ(0deg); opacity: 0; }
+10% { opacity: 1; }
+100% { transform: translateY(100vh) rotateZ(720deg); opacity: 0; }
+}
+</style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+<!-- Contenedor para el confeti --><div id="confetti-container" class="confetti-container" style="display: none;"></div>
+
+<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-xl mb-8">
+
+<h1 class="text-3xl font-bold text-center text-yellow-700 mb-4">¡El Juego de la Granja!</h1>
+<p class="text-center text-gray-600 mb-6">Arrastra cada animal a su hogar en la granja y luego presiona "Validar".</p>
+
+<!-- Zona de Animales (Holding Pen) --><div id="animal-pen" class="flex flex-wrap items-center justify-center gap-4 p-4 mb-8 bg-yellow-100 border-2 border-dashed border-yellow-400 rounded-lg min-h-[120px]">
+
+<div id="gallina" class="animal p-4 bg-white rounded-lg shadow-md cursor-grab" draggable="true">
+<div class="animal-emoji">🐔</div>
+<div class="text-center font-semibold text-gray-700">Gallina</div>
+</div>
+
+<div id="borrego" class="animal p-4 bg-white rounded-lg shadow-md cursor-grab" draggable="true">
+<div class="animal-emoji">🐑</div>
+<div class="text-center font-semibold text-gray-700">Borrego</div>
+</div>
+
+<div id="puerco" class="animal p-4 bg-white rounded-lg shadow-md cursor-grab" draggable="true">
+<div class="animal-emoji">🐷</div>
+<div class="text-center font-semibold text-gray-700">Puerco</div>
+</div>
+
+<div id="burro" class="animal p-4 bg-white rounded-lg shadow-md cursor-grab" draggable="true">
+<div class="animal-emoji">🫏</div>
+<div class="text-center font-semibold text-gray-700">Burro</div>
+</div>
+
+</div>
+
+<!-- Zona de la Granja (Habitats) -->
+<div id="farm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+<!-- Hábitats (Drop Zones) -->
+<div id="gallinero" class="habitat flex flex-col items-center justify-center p-6 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg min-h-[180px] transition-all">
+<span class="text-2xl font-bold text-gray-700">Gallinero</span>
+<span class="text-gray-500">(Hogar de la gallina)</span>
+</div>
+
+<div id="corral" class="habitat flex flex-col items-center justify-center p-6 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg min-h-[180px] transition-all">
+<span class="text-2xl font-bold text-gray-700">Corral</span>
+<span class="text-gray-500">(Hogar del borrego)</span>
+</div>
+
+<div id="lodazal" class="habitat flex flex-col items-center justify-center p-6 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg min-h-[180px] transition-all">
+<span class="text-2xl font-bold text-gray-700">Lodazal</span>
+<span class="text-gray-500">(Hogar del puerco)</span>
+</div>
+
+<div id="establo" class="habitat flex flex-col items-center justify-center p-6 bg-gray-100 border-2 border-dashed border-gray-400 rounded-lg min-h-[180px] transition-all">
+<span class="text-2xl font-bold text-gray-700">Establo</span>
+<span class="text-gray-500">(Hogar del burro)</span>
+</div>
+
+</div>
+
+<div class="text-center flex justify-center gap-4">
+<button id="validate-button" class="px-8 py-3 bg-green-500 text-white font-bold rounded-lg shadow-md hover:bg-green-600 transition-colors text-xl">
+Validar Respuestas
+</button>
+<!-- Botón de Reinicio Añadido -->
+<button id="main-restart-button" class="px-8 py-3 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition-colors text-xl">
+Reiniciar
+</button>
+</div>
+
+</div>
+
+<!-- Mensaje de Felicitación (Oculto) --><div id="message-box" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4" style="display: none;">
+<div class="bg-white p-8 rounded-lg shadow-2xl text-center transform transition-all scale-95 opacity-0" id="message-content">
+<h2 class="text-4xl font-bold text-green-600 mb-4">¡Felicidades!</h2>
+<p class="text-lg text-gray-700 mb-6">¡Has colocado a todos los animales en su hogar correcto!</p>
+<button id="restart-button" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
+Jugar de Nuevo
+</button>
+</div>
+</div>
+
+<!-- Elementos de Audio -->
+<!-- (Comentario: Se cambiaron los SRC para evitar errores de 'NotSupportedError' por hotlinking) -->
+<audio id="success-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_14f3c70b8f.mp3" preload="auto"></audio>
+<audio id="error-sound" src="https://cdn.pixabay.com/audio/2022/03/16/audio_62348dd051.mp3" preload="auto"></audio>
+<audio id="fanfare-sound" src="https://cdn.pixabay.com/audio/2022/03/10/audio_c0c16b77c5.mp3" preload="auto"></audio>
+
+<script>
+// confeti.js (mini librería de confeti)
+function launchConfetti() {
+const confettiContainer = document.getElementById('confetti-container');
+confettiContainer.style.display = 'block';
+const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+const numConfetti = 100;
+
+for (let i = 0; i < numConfetti; i++) {
+const confetti = document.createElement('div');
+confetti.classList.add('confetti');
+confetti.style.left = Math.random() * 100 + 'vw';
+confetti.style.top = Math.random() * -50 + 'px'; // Start above screen
+confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+confetti.style.animationDuration = (Math.random() * 2 + 3) + 's'; // 3-5 seconds
+confetti.style.animationDelay = (Math.random() * 3) + 's'; // Delay for staggered effect
+confetti.style.transform = `scale(${Math.random() * 0.5 + 0.5})`; // Random size
+confettiContainer.appendChild(confetti);
+}
+
+setTimeout(() => {
+confettiContainer.style.display = 'none';
+confettiContainer.innerHTML = ''; // Clear confetti
+}, 7000); // Confetti lasts for 7 seconds
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+const animals = document.querySelectorAll('.animal');
+const habitats = document.querySelectorAll('.habitat');
+const animalPen = document.getElementById('animal-pen');
+const messageBox = document.getElementById('message-box');
+const messageContent = document.getElementById('message-content');
+const restartButton = document.getElementById('restart-button');
+const validateButton = document.getElementById('validate-button');
+// Añadimos la referencia al nuevo botón de reinicio
+const mainRestartButton = document.getElementById('main-restart-button');
+
+const successSound = document.getElementById('success-sound');
+const errorSound = document.getElementById('error-sound');
+const fanfareSound = document.getElementById('fanfare-sound');
+
+const correctMatches = {
+'gallina': 'gallinero',
+'borrego': 'corral',
+'puerco': 'lodazal',
+'burro': 'establo'
+};
+
+let draggedAnimal = null; // Para mantener la referencia del animal que se está arrastrando
+
+// --- Lógica de Arrastrar (Drag) ---
+animals.forEach(animal => {
+animal.addEventListener('dragstart', (e) => {
+e.dataTransfer.setData('text/plain', animal.id);
+e.target.classList.add('dragging');
+draggedAnimal = animal; // Guardamos la referencia
+});
+
+animal.addEventListener('dragend', (e) => {
+e.target.classList.remove('dragging');
+draggedAnimal = null;
+});
+});
+
+// --- Lógica de Soltar (Drop) ---
+habitats.forEach(habitat => {
+habitat.addEventListener('dragover', (e) => {
+e.preventDefault();
+habitat.classList.add('drag-over');
+});
+
+habitat.addEventListener('dragleave', () => {
+habitat.classList.remove('drag-over');
+});
+
+habitat.addEventListener('drop', (e) => {
+e.preventDefault();
+habitat.classList.remove('drag-over');
+
+const animalId = e.dataTransfer.getData('text/plain');
+const animal = document.getElementById(animalId);
+
+// Si el animal ya tiene un padre (está en un hábitat), lo quitamos de ahí
+if (animal.parentNode && animal.parentNode.classList.contains('habitat')) {
+const oldHabitat = animal.parentNode;
+// Opcional: limpiar estilos de validación del hábitat anterior
+oldHabitat.classList.remove('valid-placement', 'invalid-placement');
+// Restaurar el texto del hábitat si es necesario
+if (!oldHabitat.querySelector('.animal')) { // Si ya no hay un animal
+const oldHabitatId = oldHabitat.id;
+let oldAnimalName = '';
+if (oldHabitatId === 'gallinero') oldAnimalName = 'gallina';
+if (oldHabitatId === 'corral') oldAnimalName = 'borrego';
+if (oldHabitatId === 'lodazal') oldAnimalName = 'puerco';
+if (oldHabitatId === 'establo') oldAnimalName = 'burro';
+oldHabitat.innerHTML = `
+<span class="text-2xl font-bold text-gray-700">${oldHabitatId.charAt(0).toUpperCase() + oldHabitatId.slice(1)}</span>
+<span class="text-gray-500">(Hogar del ${oldAnimalName})</span>
+`;
+}
+}
+
+// Quitamos el animal de donde estuviera (sea el corral o otro hábitat)
+animalPen.appendChild(animal); // Temporalmente de vuelta al corral
+habitat.innerHTML = ''; // Limpiamos el texto del hábitat
+habitat.appendChild(animal); // Lo colocamos en el nuevo hábitat
+
+// No validamos aquí, solo movemos y reproducimos sonido (neutro si se mueve de sitio)
+// Si se mueve de la zona de inicio a un hábitat, asumimos un "sonido neutro" o "éxito de colocación"
+// Si ya estaba en un hábitat y se mueve a otro, el sonido no tiene que ser de error
+
+// Reproducimos un sonido "neutro/colocación"
+successSound.currentTime = 0;
+successSound.play().catch(e => console.log("Error al reproducir sonido de éxito:", e)); // Añadido catch por si acaso
+});
+});
+
+// --- Lógica del botón Validar ---
+validateButton.addEventListener('click', () => {
+let allCorrect = true;
+habitats.forEach(habitat => {
+habitat.classList.remove('valid-placement', 'invalid-placement'); // Limpiar estilos anteriores
+const animalInHabitat = habitat.querySelector('.animal');
+
+if (animalInHabitat) {
+if (correctMatches[animalInHabitat.id] === habitat.id) {
+habitat.classList.add('valid-placement');
+} else {
+habitat.classList.add('invalid-placement');
+allCorrect = false;
+errorSound.currentTime = 0;
+errorSound.play().catch(e => console.log("Error al reproducir sonido de error:", e)); // Añadido catch
+}
+} else {
+// Si un hábitat está vacío, se considera incorrecto (a menos que no haya animales arrastrados aún)
+// Para este juego, todos deben tener un animal.
+// Podemos darle un estilo de "vacío" o "incorrecto"
+habitat.classList.add('invalid-placement');
+allCorrect = false;
+}
+});
+
+// Reproducir sonido de error una sola vez si algo está mal, en lugar de por cada error
+if (!allCorrect && Array.from(habitats).some(h => h.classList.contains('invalid-placement'))) {
+errorSound.currentTime = 0;
+errorSound.play().catch(e => console.log("Error al reproducir sonido de error:", e));
+}
+
+if (allCorrect) {
+// ¡Todos correctos!
+fanfareSound.currentTime = 0;
+fanfareSound.play().catch(e => console.log("Error al reproducir fanfarria:", e)); // Añadido catch
+launchConfetti(); // Lanzar confeti
+
+messageBox.style.display = 'flex';
+setTimeout(() => {
+messageContent.classList.remove('scale-95', 'opacity-0');
+messageContent.classList.add('scale-100', 'opacity-100');
+}, 10);
+} else {
+// Si hay errores, no mostramos el mensaje de victoria
+// El usuario debe corregirlos y volver a validar
+}
+});
+
+// --- Lógica de Reinicio ---
+// Convertimos la lógica de reinicio en una función reutilizable
+function resetGame() {
+// Ocultar mensaje
+messageContent.classList.add('scale-95', 'opacity-0');
+setTimeout(() => {
+messageBox.style.display = 'none';
+}, 200);
+
+// Devolver animales al corral y resetear sus propiedades
+animals.forEach(animal => {
+animal.draggable = true;
+animal.classList.add('cursor-grab');
+animal.classList.remove('cursor-auto');
+animalPen.appendChild(animal); // De vuelta al corral inicial
+});
+
+// Resetear hábitats
+habitats.forEach(habitat => {
+habitat.classList.remove('valid-placement', 'invalid-placement', 'drag-over');
+// Restauramos el texto original
+const habitatId = habitat.id;
+let animalName = '';
+if (habitatId === 'gallinero') animalName = 'gallina';
+if (habitatId === 'corral') animalName = 'borrego';
+if (habitatId === 'lodazal') animalName = 'puerco';
+if (habitatId === 'establo') animalName = 'burro';
+
+habitat.innerHTML = `
+<span class="text-2xl font-bold text-gray-700">${habitatId.charAt(0).toUpperCase() + habitatId.slice(1)}</span>
+<span class="text-gray-500">(Hogar del ${animalName})</span>
+`;
+});
+}
+
+// Asignamos la función de reinicio a ambos botones
+restartButton.addEventListener('click', resetGame);
+mainRestartButton.addEventListener('click', resetGame);
+});
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

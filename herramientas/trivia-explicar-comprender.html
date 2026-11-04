@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trivia: Explicar y Comprender</title>
+<style>
+:root {
+--color-bg-base: #0f172a;
+--color-bg-elevated: #020617;
+--color-bg-surface: #1e293b;
+--color-text-primary: #f1f5f9;
+--color-text-secondary: #cbd5e1;
+--color-primary: #38bdf8;
+--color-primary-hover: #0ea5e9;
+--color-success: #10b981;
+--color-error: #ef4444;
+--color-warning: #f59e0b;
+}
+
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-bg-base) 100%);
+color: var(--color-text-primary);
+min-height: 100vh;
+padding: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.container {
+max-width: 900px;
+width: 100%;
+}
+
+.header {
+text-align: center;
+margin-bottom: 30px;
+}
+
+.header h1 {
+font-size: 2.5rem;
+color: var(--color-primary);
+margin-bottom: 10px;
+}
+
+.header p {
+color: var(--color-text-secondary);
+font-size: 1.1rem;
+}
+
+.score-panel {
+background: var(--color-bg-surface);
+border-radius: 12px;
+padding: 20px;
+margin-bottom: 30px;
+display: flex;
+justify-content: space-around;
+align-items: center;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.score-item {
+text-align: center;
+}
+
+.score-item h3 {
+font-size: 0.9rem;
+color: var(--color-text-secondary);
+margin-bottom: 5px;
+text-transform: uppercase;
+}
+
+.score-item .value {
+font-size: 2rem;
+font-weight: bold;
+color: var(--color-primary);
+}
+
+.question-card {
+background: var(--color-bg-surface);
+border-radius: 12px;
+padding: 30px;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+margin-bottom: 20px;
+}
+
+.question-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.question-number {
+font-size: 0.9rem;
+color: var(--color-text-secondary);
+}
+
+.timer {
+font-size: 1.5rem;
+font-weight: bold;
+color: var(--color-warning);
+}
+
+.question-text {
+font-size: 1.4rem;
+margin-bottom: 25px;
+line-height: 1.5;
+}
+
+.answers {
+display: grid;
+grid-template-columns: 1fr;
+gap: 12px;
+}
+
+.answer-btn {
+background: rgba(56, 189, 248, 0.1);
+border: 2px solid var(--color-primary);
+color: var(--color-text-primary);
+padding: 18px;
+border-radius: 8px;
+font-size: 1.1rem;
+cursor: pointer;
+transition: all 0.3s ease;
+text-align: left;
+}
+
+.answer-btn:hover:not(:disabled) {
+background: rgba(56, 189, 248, 0.2);
+transform: translateY(-2px);
+box-shadow: 0 4px 8px rgba(56, 189, 248, 0.3);
+}
+
+.answer-btn.correct {
+background: var(--color-success);
+border-color: var(--color-success);
+animation: pulse 0.5s;
+}
+
+.answer-btn.incorrect {
+background: var(--color-error);
+border-color: var(--color-error);
+animation: shake 0.5s;
+}
+
+.answer-btn:disabled {
+cursor: not-allowed;
+opacity: 0.6;
+}
+
+.next-btn {
+display: block;
+width: 100%;
+padding: 18px;
+background: var(--color-primary);
+color: var(--color-bg-base);
+border: none;
+border-radius: 8px;
+font-size: 1.2rem;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.3s ease;
+margin-top: 20px;
+}
+
+.next-btn:hover {
+background: var(--color-primary-hover);
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+}
+
+.results {
+background: var(--color-bg-surface);
+border-radius: 12px;
+padding: 40px;
+text-align: center;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.results h2 {
+font-size: 2.5rem;
+color: var(--color-primary);
+margin-bottom: 20px;
+}
+
+.results .final-score {
+font-size: 3.5rem;
+font-weight: bold;
+color: var(--color-success);
+margin: 20px 0;
+}
+
+.results p {
+font-size: 1.2rem;
+color: var(--color-text-secondary);
+margin-bottom: 30px;
+}
+
+.restart-btn {
+padding: 18px 40px;
+background: var(--color-primary);
+color: var(--color-bg-base);
+border: none;
+border-radius: 8px;
+font-size: 1.2rem;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+.restart-btn:hover {
+background: var(--color-primary-hover);
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+}
+
+.hidden {
+display: none;
+}
+
+@keyframes pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-10px); }
+75% { transform: translateX(10px); }
+}
+
+@media (max-width: 768px) {
+.header h1 {
+font-size: 2rem;
+}
+
+.question-text {
+font-size: 1.2rem;
+}
+
+.answer-btn {
+font-size: 1rem;
+padding: 15px;
+}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1>🎯 Trivia: Explicar y Comprender</h1>
+<p>15 preguntas sobre la investigación científica - ¡Demuestra tu conocimiento!</p>
+</div>
+
+<div id="scorePanelContainer" class="score-panel hidden">
+<div class="score-item">
+<h3>Pregunta</h3>
+<div class="value" id="questionCounter">1/15</div>
+</div>
+<div class="score-item">
+<h3>Puntos</h3>
+<div class="value" id="scoreDisplay">0</div>
+</div>
+<div class="score-item">
+<h3>Tiempo</h3>
+<div class="value timer" id="timer">10</div>
+</div>
+</div>
+
+<div id="quizContainer" class="question-card hidden">
+<div class="question-header">
+<span class="question-number" id="questionType">Opción Múltiple</span>
+</div>
+<div class="question-text" id="questionText"></div>
+<div class="answers" id="answersContainer"></div>
+<button id="nextBtn" class="next-btn hidden">Siguiente Pregunta →</button>
+</div>
+
+<div id="startContainer" class="question-card">
+<h2 style="text-align: center; color: var(--color-primary); margin-bottom: 20px;">¡Bienvenido a la Trivia!</h2>
+<p style="text-align: center; font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: 30px;">
+Responde 15 preguntas sobre explicación y comprensión en la investigación científica.<br>
+<strong>Sistema de puntos:</strong><br>
+• Respuesta correcta = 100 puntos base<br>
+• Bonus por rapidez: +10 puntos por segundo restante
+</p>
+<button class="next-btn" onclick="startQuiz()">Iniciar Trivia 🚀</button>
+</div>
+
+<div id="resultsContainer" class="results hidden">
+<h2>🎉 ¡Trivia Completada!</h2>
+<div class="final-score" id="finalScore">0</div>
+<p id="resultMessage"></p>
+<button class="restart-btn" onclick="restartQuiz()">Jugar de Nuevo</button>
+</div>
+</div>
+
+<script>
+const questions = [
+{
+type: 'multiple',
+question: '¿Cuáles son los dos autores principales analizados en el documento sobre explicación-comprensión?',
+answers: ['Georg von Wright y Karl Apel', 'Russell y Wittgenstein', 'Droysen y Dilthey', 'Hume y Popper'],
+correct: 0
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: La tradición galileana se asocia con la comprensión teleológica de fenómenos.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: '¿Qué filósofo acuñó los términos Erklären (explicación) y Verstehen (comprensión)?',
+answers: ['Wilhelm Dilthey', 'Johann Gustav Droysen', 'Max Weber', 'Georg von Wright'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: El monismo metodológico propone métodos diferentes para ciencias naturales y sociales.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: 'Según Von Wright, la investigación científica presenta dos aspectos. ¿Cuáles son?',
+answers: ['Teoría e hipótesis', 'Escrutinio de hechos y construcción de hipótesis', 'Predicción y explicación', 'Observación y experimentación'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: La tradición aristotélica se centra en explicaciones causales y mecanicistas.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: '¿Qué nombre utiliza Von Wright para caracterizar la filosofía antipositivista?',
+answers: ['Fenomenología', 'Hermenéutica', 'Estructuralismo', 'Pragmatismo'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: Para Hume, la relación causa-efecto es una secuencia regular de fenómenos en el tiempo.',
+answers: ['Verdadero', 'Falso'],
+correct: 0
+},
+{
+type: 'multiple',
+question: '¿Cuál es el propósito de las ciencias según la tradición galileana?',
+answers: ['Comprender fenómenos únicos', 'Explicar y predecir fenómenos', 'Interpretar significados', 'Analizar intenciones'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: Los juegos del lenguaje del segundo Wittgenstein resolvieron completamente el debate explicación-comprensión.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: '¿Qué tres modelos distingue Von Wright en su análisis?',
+answers: ['Inductivo, deductivo y abductivo', 'Nomológico deductivo, racionalista-crítico y explicativo-comprensivo', 'Cualitativo, cuantitativo y mixto', 'Positivista, interpretativo y crítico'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: Según el documento, la explicación mira hacia el futuro mientras que la comprensión mira hacia el pasado.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: '¿Qué tipo de enfoque propone Apel para reconstruir el debate explicación-comprensión?',
+answers: ['Hermenéutico tradicional', 'Pragmático-transcendental', 'Positivista lógico', 'Fenomenológico'],
+correct: 1
+},
+{
+type: 'boolean',
+question: 'Verdadero o Falso: Las ciencias del espíritu, según Dilthey, deben partir de la especulación y no de la experiencia concreta.',
+answers: ['Verdadero', 'Falso'],
+correct: 1
+},
+{
+type: 'multiple',
+question: '¿Cuál es la relación entre predicción y explicación según Von Wright?',
+answers: ['Son conceptos opuestos', 'En la predicción se establecen hechos, en la explicación se formulan leyes', 'Ambos son sinónimos', 'La predicción no tiene relación con la explicación'],
+correct: 1
+}
+];
+
+let currentQuestion = 0;
+let score = 0;
+let timer;
+let timeLeft = 10;
+
+function startQuiz() {
+document.getElementById('startContainer').classList.add('hidden');
+document.getElementById('scorePanelContainer').classList.remove('hidden');
+document.getElementById('quizContainer').classList.remove('hidden');
+loadQuestion();
+}
+
+function loadQuestion() {
+if (currentQuestion >= questions.length) {
+showResults();
+return;
+}
+
+const q = questions[currentQuestion];
+document.getElementById('questionType').textContent = q.type === 'boolean' ? 'Verdadero o Falso' : 'Opción Múltiple';
+document.getElementById('questionText').textContent = q.question;
+document.getElementById('questionCounter').textContent = `${currentQuestion + 1}/${questions.length}`;
+
+const answersContainer = document.getElementById('answersContainer');
+answersContainer.innerHTML = '';
+
+q.answers.forEach((answer, index) => {
+const btn = document.createElement('button');
+btn.className = 'answer-btn';
+btn.textContent = answer;
+btn.onclick = () => selectAnswer(index);
+answersContainer.appendChild(btn);
+});
+
+document.getElementById('nextBtn').classList.add('hidden');
+
+timeLeft = 10;
+document.getElementById('timer').textContent = timeLeft;
+startTimer();
+}
+
+function startTimer() {
+clearInterval(timer);
+timer = setInterval(() => {
+timeLeft--;
+document.getElementById('timer').textContent = timeLeft;
+
+if (timeLeft <= 0) {
+clearInterval(timer);
+selectAnswer(-1);
+}
+}, 1000);
+}
+
+function selectAnswer(selectedIndex) {
+clearInterval(timer);
+
+const q = questions[currentQuestion];
+const buttons = document.querySelectorAll('.answer-btn');
+
+buttons.forEach(btn => btn.disabled = true);
+
+if (selectedIndex === q.correct) {
+buttons[selectedIndex].classList.add('correct');
+const basePoints = 100;
+const timeBonus = timeLeft * 10;
+const totalPoints = basePoints + timeBonus;
+score += totalPoints;
+
+setTimeout(() => {
+document.getElementById('scoreDisplay').textContent = score;
+}, 300);
+} else {
+if (selectedIndex >= 0) {
+buttons[selectedIndex].classList.add('incorrect');
+}
+buttons[q.correct].classList.add('correct');
+}
+
+document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+document.getElementById('nextBtn').onclick = () => {
+currentQuestion++;
+loadQuestion();
+};
+
+function showResults() {
+document.getElementById('scorePanelContainer').classList.add('hidden');
+document.getElementById('quizContainer').classList.add('hidden');
+document.getElementById('resultsContainer').classList.remove('hidden');
+
+document.getElementById('finalScore').textContent = score + ' puntos';
+
+let message = '';
+if (score >= 1500) {
+message = '¡Excelente! Dominas los conceptos de explicación y comprensión en la investigación científica. 🏆';
+} else if (score >= 1000) {
+message = '¡Muy bien! Tienes un buen conocimiento sobre el tema. 🎯';
+} else if (score >= 500) {
+message = 'Bien hecho. Hay algunos conceptos que podrías repasar. 📚';
+} else {
+message = 'Sigue estudiando. Te recomendamos revisar el documento nuevamente. 💪';
+}
+
+document.getElementById('resultMessage').textContent = message;
+}
+
+function restartQuiz() {
+currentQuestion = 0;
+score = 0;
+timeLeft = 10;
+clearInterval(timer);
+
+document.getElementById('resultsContainer').classList.add('hidden');
+document.getElementById('startContainer').classList.remove('hidden');
+document.getElementById('scoreDisplay').textContent = '0';
+}
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

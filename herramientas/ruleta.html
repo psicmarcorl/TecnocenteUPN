@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruleta de Alumnos</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 20px;
+}
+
+.container {
+background: white;
+border-radius: 20px;
+box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+padding: 30px;
+max-width: 1200px;
+width: 100%;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 30px;
+}
+
+h1 {
+grid-column: 1 / -1;
+text-align: center;
+color: #667eea;
+font-size: 2.5em;
+margin-bottom: 20px;
+text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.input-section {
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+.input-section h2 {
+color: #764ba2;
+font-size: 1.5em;
+}
+
+textarea {
+width: 100%;
+height: 300px;
+padding: 15px;
+border: 3px solid #667eea;
+border-radius: 10px;
+font-size: 16px;
+font-family: inherit;
+resize: vertical;
+transition: all 0.3s;
+}
+
+textarea:focus {
+outline: none;
+border-color: #764ba2;
+box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+}
+
+.wheel-section {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 20px;
+}
+
+.wheel-container {
+position: relative;
+width: 400px;
+height: 400px;
+}
+
+#wheelCanvas {
+width: 100%;
+height: 100%;
+filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+}
+
+.wheel-pointer {
+position: absolute;
+top: -20px;
+left: 50%;
+transform: translateX(-50%);
+width: 0;
+height: 0;
+border-left: 20px solid transparent;
+border-right: 20px solid transparent;
+border-top: 40px solid #ff6b6b;
+filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+z-index: 10;
+}
+
+.buttons {
+display: flex;
+gap: 15px;
+flex-wrap: wrap;
+justify-content: center;
+}
+
+button {
+padding: 15px 40px;
+font-size: 18px;
+font-weight: bold;
+border: none;
+border-radius: 50px;
+cursor: pointer;
+transition: all 0.3s;
+box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+
+#spinBtn {
+background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+color: white;
+}
+
+#spinBtn:hover:not(:disabled) {
+transform: translateY(-3px);
+box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+}
+
+#resetBtn {
+background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+color: white;
+}
+
+#resetBtn:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+}
+
+button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.result {
+grid-column: 1 / -1;
+text-align: center;
+padding: 20px;
+background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+border-radius: 15px;
+min-height: 80px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.result h2 {
+color: #764ba2;
+font-size: 2em;
+animation: pulse 0.5s;
+}
+
+@keyframes pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.1); }
+}
+
+.students-count {
+text-align: center;
+color: #666;
+font-size: 14px;
+margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+.container {
+grid-template-columns: 1fr;
+}
+
+.wheel-container {
+width: 300px;
+height: 300px;
+}
+
+h1 {
+font-size: 1.8em;
+}
+}
+
+#confettiCanvas {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+z-index: 9999;
+}
+</style>
+</head>
+<body>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="container">
+<h1>🎯 Ruleta de Alumnos 🎯</h1>
+
+<div class="input-section">
+<h2>📝 Lista de Alumnos</h2>
+<textarea id="studentInput" placeholder="Escribe un nombre por línea:&#10;María&#10;Juan&#10;Pedro&#10;Ana&#10;Luis"></textarea>
+<div class="students-count" id="studentCount">0 alumnos en la lista</div>
+<div class="buttons">
+<button id="resetBtn">🔄 Reiniciar Todo</button>
+</div>
+</div>
+
+<div class="wheel-section">
+<div class="wheel-container">
+<div class="wheel-pointer"></div>
+<canvas id="wheelCanvas" width="400" height="400"></canvas>
+</div>
+<div class="buttons">
+<button id="spinBtn">🎲 ¡GIRAR!</button>
+</div>
+</div>
+
+<div class="result" id="result">
+<h2>¡Agrega alumnos y gira la ruleta! 🎊</h2>
+</div>
+</div>
+
+<script>
+// Variables globales
+let students = [];
+let currentStudents = [];
+let isSpinning = false;
+let rotation = 0;
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const confettiCanvas = document.getElementById('confettiCanvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+
+// Configurar canvas de confetti
+confettiCanvas.width = window.innerWidth;
+confettiCanvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+confettiCanvas.width = window.innerWidth;
+confettiCanvas.height = window.innerHeight;
+});
+
+// Colores vibrantes para la ruleta
+const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+'#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'];
+
+// Audio Context para sonidos
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(frequency, duration, type = 'sine') {
+const oscillator = audioContext.createOscillator();
+const gainNode = audioContext.createGain();
+
+oscillator.connect(gainNode);
+gainNode.connect(audioContext.destination);
+
+oscillator.frequency.value = frequency;
+oscillator.type = type;
+
+gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+oscillator.start(audioContext.currentTime);
+oscillator.stop(audioContext.currentTime + duration);
+}
+
+function playSpinSound() {
+playSound(200, 0.1, 'square');
+}
+
+function playWinSound() {
+playSound(523.25, 0.2, 'sine');
+setTimeout(() => playSound(659.25, 0.2, 'sine'), 100);
+setTimeout(() => playSound(783.99, 0.3, 'sine'), 200);
+}
+
+// Sistema de confetti
+class Confetti {
+constructor() {
+this.x = Math.random() * confettiCanvas.width;
+this.y = -10;
+this.size = Math.random() * 10 + 5;
+this.speedY = Math.random() * 3 + 2;
+this.speedX = Math.random() * 2 - 1;
+this.color = colors[Math.floor(Math.random() * colors.length)];
+this.rotation = Math.random() * 360;
+this.rotationSpeed = Math.random() * 10 - 5;
+}
+
+update() {
+this.y += this.speedY;
+this.x += this.speedX;
+this.rotation += this.rotationSpeed;
+}
+
+draw() {
+confettiCtx.save();
+confettiCtx.translate(this.x, this.y);
+confettiCtx.rotate(this.rotation * Math.PI / 180);
+confettiCtx.fillStyle = this.color;
+confettiCtx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+confettiCtx.restore();
+}
+}
+
+let confettiParticles = [];
+let confettiAnimationId = null;
+
+function createConfetti() {
+confettiParticles = [];
+for (let i = 0; i < 150; i++) {
+confettiParticles.push(new Confetti());
+}
+animateConfetti();
+}
+
+function animateConfetti() {
+confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+confettiParticles.forEach((particle, index) => {
+particle.update();
+particle.draw();
+
+if (particle.y > confettiCanvas.height) {
+confettiParticles.splice(index, 1);
+}
+});
+
+if (confettiParticles.length > 0) {
+confettiAnimationId = requestAnimationFrame(animateConfetti);
+}
+}
+
+// Dibujar la ruleta
+function drawWheel() {
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = 180;
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+if (currentStudents.length === 0) {
+// Ruleta vacía
+ctx.beginPath();
+ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+ctx.fillStyle = '#e0e0e0';
+ctx.fill();
+ctx.strokeStyle = '#999';
+ctx.lineWidth = 5;
+ctx.stroke();
+
+ctx.fillStyle = '#666';
+ctx.font = '20px Arial';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText('Agrega alumnos', centerX, centerY);
+return;
+}
+
+const arc = (2 * Math.PI) / currentStudents.length;
+
+currentStudents.forEach((student, i) => {
+const angle = rotation + i * arc;
+
+// Dibujar segmento
+ctx.beginPath();
+ctx.moveTo(centerX, centerY);
+ctx.arc(centerX, centerY, radius, angle, angle + arc);
+ctx.closePath();
+ctx.fillStyle = colors[i % colors.length];
+ctx.fill();
+ctx.strokeStyle = 'white';
+ctx.lineWidth = 3;
+ctx.stroke();
+
+// Dibujar texto
+ctx.save();
+ctx.translate(centerX, centerY);
+ctx.rotate(angle + arc / 2);
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillStyle = 'white';
+ctx.font = 'bold 16px Arial';
+ctx.shadowColor = 'rgba(0,0,0,0.5)';
+ctx.shadowBlur = 4;
+ctx.fillText(student, radius * 0.6, 0);
+ctx.restore();
+});
+
+// Centro de la ruleta
+ctx.beginPath();
+ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+ctx.fillStyle = 'white';
+ctx.fill();
+ctx.strokeStyle = '#764ba2';
+ctx.lineWidth = 4;
+ctx.stroke();
+}
+
+// Actualizar lista de estudiantes
+function updateStudents() {
+const input = document.getElementById('studentInput').value;
+students = input.split('\n')
+.map(s => s.trim())
+.filter(s => s.length > 0);
+currentStudents = [...students];
+
+document.getElementById('studentCount').textContent =
+`${students.length} alumno${students.length !== 1 ? 's' : ''} en la lista`;
+
+drawWheel();
+}
+
+// Girar la ruleta
+async function spinWheel() {
+if (isSpinning || currentStudents.length === 0) return;
+
+isSpinning = true;
+document.getElementById('spinBtn').disabled = true;
+document.getElementById('result').innerHTML = '<h2>🎲 Girando...</h2>';
+
+const spins = 5 + Math.random() * 3;
+const extraDegrees = Math.random() * 360;
+const totalRotation = spins * 360 + extraDegrees;
+const duration = 4000;
+const startTime = Date.now();
+const startRotation = rotation;
+
+function animate() {
+const elapsed = Date.now() - startTime;
+const progress = Math.min(elapsed / duration, 1);
+
+// Easing function
+const easeOut = 1 - Math.pow(1 - progress, 3);
+rotation = startRotation + totalRotation * easeOut;
+
+if (progress < 1) {
+if (Math.random() > 0.7) playSpinSound();
+drawWheel();
+requestAnimationFrame(animate);
+} else {
+selectWinner();
+}
+}
+
+animate();
+}
+
+function selectWinner() {
+const arc = (2 * Math.PI) / currentStudents.length;
+const normalizedRotation = (rotation % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+const pointerAngle = (2 * Math.PI - normalizedRotation) % (2 * Math.PI);
+const winnerIndex = Math.floor(pointerAngle / arc) % currentStudents.length;
+const winner = currentStudents[winnerIndex];
+
+// Mostrar ganador
+document.getElementById('result').innerHTML = `<h2>🎉 ¡${winner}! 🎉</h2>`;
+
+// Efectos
+playWinSound();
+createConfetti();
+
+// Remover ganador de la lista
+currentStudents.splice(winnerIndex, 1);
+
+setTimeout(() => {
+drawWheel();
+isSpinning = false;
+document.getElementById('spinBtn').disabled = currentStudents.length === 0;
+
+if (currentStudents.length === 0) {
+document.getElementById('result').innerHTML =
+'<h2>✅ ¡Todos los alumnos han sido seleccionados!</h2>';
+}
+}, 500);
+}
+
+// Reiniciar todo
+function resetAll() {
+document.getElementById('studentInput').value = '';
+students = [];
+currentStudents = [];
+rotation = 0;
+isSpinning = false;
+document.getElementById('spinBtn').disabled = false;
+document.getElementById('result').innerHTML =
+'<h2>¡Agrega alumnos y gira la ruleta! 🎊</h2>';
+document.getElementById('studentCount').textContent = '0 alumnos en la lista';
+drawWheel();
+}
+
+// Event listeners
+document.getElementById('studentInput').addEventListener('input', updateStudents);
+document.getElementById('spinBtn').addEventListener('click', spinWheel);
+document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+// Inicializar
+drawWheel();
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

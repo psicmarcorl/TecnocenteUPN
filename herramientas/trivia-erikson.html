@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trivia Erikson</title>
+<style>
+:root {
+--bg-1: #fff1dc;
+--bg-2: #e7f5ff;
+--bg-3: #fff0f6;
+--ink: #1f2430;
+--accent: #ff7a59;
+--accent-2: #3b82f6;
+--accent-3: #22c55e;
+--card: #ffffffd9;
+--shadow: 0 16px 40px rgba(0,0,0,0.12);
+--danger: #ef4444;
+--warn: #f59e0b;
+--muted: #6b7280;
+}
+
+* { box-sizing: border-box; }
+
+body {
+margin: 0;
+font-family: "Trebuchet MS", "Verdana", sans-serif;
+color: var(--ink);
+background:
+radial-gradient(circle at top left, var(--bg-2), transparent 45%),
+radial-gradient(circle at top right, var(--bg-3), transparent 50%),
+linear-gradient(160deg, var(--bg-1), #ffffff 55%);
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+}
+
+.app {
+width: min(1100px, 100%);
+display: grid;
+grid-template-columns: minmax(0, 1fr) 320px;
+gap: 20px;
+}
+
+header {
+margin-bottom: 12px;
+}
+
+h1 {
+margin: 0 0 8px;
+font-size: clamp(24px, 4vw, 34px);
+letter-spacing: 0.4px;
+}
+
+p { margin: 6px 0; }
+
+.panel {
+background: var(--card);
+border: 2px solid #efe2ff;
+border-radius: 18px;
+padding: 18px;
+box-shadow: var(--shadow);
+backdrop-filter: blur(6px);
+}
+
+.stats {
+display: grid;
+gap: 12px;
+}
+
+.stat {
+display: flex;
+align-items: center;
+justify-content: space-between;
+background: #fff;
+border-radius: 14px;
+padding: 12px 14px;
+border: 1px solid #f1d9ff;
+}
+
+.stat strong {
+font-size: 18px;
+}
+
+.bar {
+height: 10px;
+background: #eef2ff;
+border-radius: 999px;
+overflow: hidden;
+}
+
+.bar span {
+display: block;
+height: 100%;
+width: 100%;
+background: linear-gradient(90deg, var(--accent), var(--accent-2));
+transition: width 0.4s ease;
+}
+
+.question {
+display: grid;
+gap: 12px;
+}
+
+.question h2 {
+margin: 0;
+font-size: clamp(18px, 3vw, 24px);
+}
+
+.options {
+display: grid;
+gap: 10px;
+}
+
+button.option {
+border: 2px solid #e5e7eb;
+background: #fff;
+border-radius: 12px;
+padding: 12px 14px;
+text-align: left;
+font-size: 16px;
+cursor: pointer;
+transition: transform 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+button.option:hover {
+border-color: #d1d5db;
+box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+transform: translateY(-1px);
+}
+
+button.option:disabled {
+cursor: default;
+opacity: 0.7;
+box-shadow: none;
+transform: none;
+}
+
+.match-grid {
+display: grid;
+gap: 10px;
+}
+
+.match-row {
+display: grid;
+grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+gap: 10px;
+align-items: center;
+background: #fff;
+border-radius: 12px;
+padding: 10px 12px;
+border: 1px solid #f1d9ff;
+}
+
+select {
+width: 100%;
+padding: 10px;
+border-radius: 10px;
+border: 1px solid #e5e7eb;
+font-size: 15px;
+background: #fff;
+}
+
+.controls {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+}
+
+.btn {
+border: none;
+border-radius: 12px;
+padding: 12px 16px;
+font-size: 15px;
+cursor: pointer;
+background: var(--accent-2);
+color: #fff;
+}
+
+.btn.secondary {
+background: #e5e7eb;
+color: #111827;
+}
+
+.feedback {
+padding: 10px 12px;
+border-radius: 12px;
+background: #f8fafc;
+border: 1px solid #e2e8f0;
+color: var(--muted);
+}
+
+.feedback.good { color: #047857; border-color: #a7f3d0; background: #ecfdf5; }
+.feedback.bad { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+
+.badge {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+padding: 6px 10px;
+border-radius: 999px;
+background: #fff;
+border: 1px solid #e5e7eb;
+font-size: 13px;
+}
+
+.footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+flex-wrap: wrap;
+color: var(--muted);
+font-size: 13px;
+}
+
+@media (max-width: 900px) {
+.app { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+.panel { padding: 14px; }
+.match-row { grid-template-columns: 1fr; }
+button.option { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+<section class="panel">
+<header>
+<h1>Trivia de la teoría psicosocial de Erik Erikson</h1>
+<p>20 preguntas con opción múltiple, verdadero/falso y relación de conceptos. Ganas más puntos si respondes rápido.</p>
+</header>
+
+<div class="question" id="questionCard">
+<div class="badge" id="typeBadge">Tipo</div>
+<h2 id="questionText">Cargando pregunta...</h2>
+<div id="questionBody"></div>
+<div class="controls">
+<button class="btn secondary" id="skipBtn">Saltar (pierdes vida)</button>
+</div>
+<div class="feedback" id="feedback">Responde para ver retroalimentación.</div>
+</div>
+
+<div class="footer">
+<span id="progressText">Pregunta 1 de 20</span>
+<span id="timerText">Tiempo: 20s</span>
+</div>
+</section>
+
+<aside class="panel stats">
+<div class="stat">
+<span>Puntos</span>
+<strong id="score">0</strong>
+</div>
+<div class="stat">
+<span>Vidas</span>
+<strong id="lives">❤❤❤</strong>
+</div>
+<div class="stat">
+<span>Precisión</span>
+<strong id="accuracy">0%</strong>
+</div>
+<div>
+<p><strong>Barra de tiempo</strong></p>
+<div class="bar"><span id="timeBar"></span></div>
+</div>
+<div>
+<p><strong>Reglas de puntuación</strong></p>
+<p>- Correcta: 100 puntos + bonus por segundos restantes.</p>
+<p>- Incorrecta o tiempo agotado: pierdes 1 vida y 50 puntos.</p>
+<p>- Saltar: pierde 1 vida y sin puntos.</p>
+</div>
+<div class="controls">
+<button class="btn" id="restartBtn">Reiniciar trivia</button>
+</div>
+</aside>
+</main>
+
+<script>
+const QUESTIONS = [
+{
+type: "mcq",
+prompt: "¿Cuál es el conflicto central de la etapa de 0 a 1 año?",
+options: ["Confianza vs desconfianza", "Autonomía vs vergüenza y duda", "Identidad vs confusión de roles", "Integridad vs desesperación"],
+answer: 0,
+explain: "En la primera etapa, el bebé aprende si el mundo es confiable mediante el cuidado consistente."
+},
+{
+type: "mcq",
+prompt: "La etapa de 1 a 3 años se caracteriza por:",
+options: ["Iniciativa vs culpa", "Autonomía vs vergüenza y duda", "Laboriosidad vs inferioridad", "Intimidad vs aislamiento"],
+answer: 1,
+explain: "En la etapa de los primeros pasos y el control corporal, surge la autonomía."
+},
+{
+type: "tf",
+prompt: "Verdadero o falso: La virtud asociada a la etapa de confianza vs desconfianza es la esperanza.",
+answer: true,
+explain: "Erikson vincula cada etapa con una virtud; la primera se asocia con la esperanza."
+},
+{
+type: "mcq",
+prompt: "¿Qué conflicto describe la etapa de 3 a 6 años?",
+options: ["Iniciativa vs culpa", "Generatividad vs estancamiento", "Integridad vs desesperación", "Identidad vs confusión"],
+answer: 0,
+explain: "En preescolar, la iniciativa permite planear y actuar; la culpa aparece ante límites severos."
+},
+{
+type: "mcq",
+prompt: "La etapa de 6 a 12 años se enfoca en:",
+options: ["Laboriosidad vs inferioridad", "Autonomía vs vergüenza", "Intimidad vs aislamiento", "Confianza vs desconfianza"],
+answer: 0,
+explain: "Durante la escolaridad se consolida la competencia por medio del trabajo y logro."
+},
+{
+type: "tf",
+prompt: "Verdadero o falso: En la teoría de Erikson, cada etapa implica una crisis psicosocial que puede resolverse de forma positiva o negativa.",
+answer: true,
+explain: "Las crisis son tareas de desarrollo; su resolución afecta la personalidad futura."
+},
+{
+type: "mcq",
+prompt: "¿Cuál es el conflicto central de la adolescencia?",
+options: ["Identidad vs confusión de roles", "Intimidad vs aislamiento", "Generatividad vs estancamiento", "Iniciativa vs culpa"],
+answer: 0,
+explain: "En la adolescencia se construye un sentido coherente del yo."
+},
+{
+type: "mcq",
+prompt: "La etapa de adultez temprana (aprox. 19-40 años) se relaciona con:",
+options: ["Intimidad vs aislamiento", "Integridad vs desesperación", "Laboriosidad vs inferioridad", "Autonomía vs vergüenza"],
+answer: 0,
+explain: "Se busca establecer relaciones cercanas y compromisos significativos."
+},
+{
+type: "mcq",
+prompt: "En la adultez media, el conflicto principal es:",
+options: ["Generatividad vs estancamiento", "Iniciativa vs culpa", "Identidad vs confusión", "Confianza vs desconfianza"],
+answer: 0,
+explain: "Implica contribuir y cuidar a la siguiente generación o sentir estancamiento."
+},
+{
+type: "mcq",
+prompt: "La etapa final (vejez) se define por:",
+options: ["Integridad vs desesperación", "Intimidad vs aislamiento", "Laboriosidad vs inferioridad", "Autonomía vs vergüenza"],
+answer: 0,
+explain: "La persona evalúa su vida y busca aceptación o cae en desesperación."
+},
+{
+type: "tf",
+prompt: "Verdadero o falso: Erikson propuso exactamente cinco etapas del desarrollo.",
+answer: false,
+explain: "La teoría clásica describe ocho etapas a lo largo de la vida."
+},
+{
+type: "mcq",
+prompt: "¿Qué concepto destaca que el desarrollo ocurre en fases y se construye sobre logros previos?",
+options: ["Principio epigenético", "Refuerzo operante", "Condicionamiento clásico", "Tabula rasa"],
+answer: 0,
+explain: "El principio epigenético plantea que cada etapa emerge en secuencia."
+},
+{
+type: "tf",
+prompt: "Verdadero o falso: Las etapas de Erikson sólo ocurren en la infancia.",
+answer: false,
+explain: "Erikson extendió el desarrollo psicosocial a toda la vida."
+},
+{
+type: "mcq",
+prompt: "¿Cuál es la virtud asociada a la etapa de autonomía vs vergüenza y duda?",
+options: ["Voluntad", "Fidelidad", "Sabiduría", "Cuidado"],
+answer: 0,
+explain: "La autonomía favorece la voluntad para elegir y actuar."
+},
+{
+type: "mcq",
+prompt: "La virtud asociada a identidad vs confusión de roles es:",
+options: ["Fidelidad", "Competencia", "Amor", "Esperanza"],
+answer: 0,
+explain: "La fidelidad implica comprometerse con un sentido de identidad."
+},
+{
+type: "mcq",
+prompt: "¿Qué describe mejor la crisis de intimidad vs aislamiento?",
+options: ["Capacidad de establecer relaciones profundas", "Dominio de habilidades académicas", "Exploración de valores infantiles", "Dependencia total del cuidador"],
+answer: 0,
+explain: "Se busca cercanía emocional y compromiso con otros."
+},
+{
+type: "tf",
+prompt: "Verdadero o falso: La generatividad puede expresarse mediante mentoría, crianza o contribución social.",
+answer: true,
+explain: "Generatividad implica crear y cuidar lo que trasciende al individuo."
+},
+{
+type: "match",
+prompt: "Relaciona la etapa con su virtud principal.",
+pairs: [
+["Confianza vs desconfianza", "Esperanza"],
+["Iniciativa vs culpa", "Propósito"],
+["Laboriosidad vs inferioridad", "Competencia"],
+["Integridad vs desesperación", "Sabiduría"]
+],
+explain: "Cada etapa se asocia con una virtud que emerge de la resolución positiva."
+},
+{
+type: "match",
+prompt: "Relaciona la etapa con su rango aproximado de edad.",
+pairs: [
+["Identidad vs confusión de roles", "12-18 años"],
+["Intimidad vs aislamiento", "19-40 años"],
+["Generatividad vs estancamiento", "40-65 años"],
+["Integridad vs desesperación", "65+ años"]
+],
+explain: "Los rangos son aproximados y varían según la persona y cultura."
+},
+{
+type: "match",
+prompt: "Relaciona la etapa con su foco principal.",
+pairs: [
+["Autonomía vs vergüenza y duda", "Control personal y toma de decisiones"],
+["Iniciativa vs culpa", "Planear, jugar y emprender acciones"],
+["Laboriosidad vs inferioridad", "Logro escolar y productividad"],
+["Generatividad vs estancamiento", "Contribuir y cuidar a otros"]
+],
+explain: "Cada etapa enfatiza una tarea de desarrollo distinta."
+}
+];
+
+const MAX_TIME = 20;
+const START_LIVES = 3;
+const BASE_POINTS = 100;
+const WRONG_PENALTY = 50;
+const SPEED_BONUS = 5;
+
+let index = 0;
+let score = 0;
+let lives = START_LIVES;
+let correctCount = 0;
+let answered = 0;
+let timer = null;
+let timeLeft = MAX_TIME;
+
+const questionText = document.getElementById("questionText");
+const questionBody = document.getElementById("questionBody");
+const typeBadge = document.getElementById("typeBadge");
+const feedback = document.getElementById("feedback");
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
+const accuracyEl = document.getElementById("accuracy");
+const progressText = document.getElementById("progressText");
+const timerText = document.getElementById("timerText");
+const timeBar = document.getElementById("timeBar");
+const skipBtn = document.getElementById("skipBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+function shuffle(arr) {
+const copy = [...arr];
+for (let i = copy.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[copy[i], copy[j]] = [copy[j], copy[i]];
+}
+return copy;
+}
+
+const order = shuffle([...Array(QUESTIONS.length).keys()]);
+
+function startTimer() {
+clearInterval(timer);
+timeLeft = MAX_TIME;
+timerText.textContent = `Tiempo: ${timeLeft}s`;
+timeBar.style.width = "100%";
+timer = setInterval(() => {
+timeLeft -= 1;
+timerText.textContent = `Tiempo: ${timeLeft}s`;
+timeBar.style.width = `${(timeLeft / MAX_TIME) * 100}%`;
+if (timeLeft <= 0) {
+clearInterval(timer);
+registerWrong("Se agotó el tiempo. " + currentQuestion().explain);
+}
+}, 1000);
+}
+
+function currentQuestion() {
+return QUESTIONS[order[index]];
+}
+
+function updateStats() {
+scoreEl.textContent = score;
+livesEl.textContent = "❤".repeat(lives) + "".padStart(START_LIVES - lives, "♡");
+const accuracy = answered === 0 ? 0 : Math.round((correctCount / answered) * 100);
+accuracyEl.textContent = `${accuracy}%`;
+progressText.textContent = `Pregunta ${Math.min(index + 1, QUESTIONS.length)} de ${QUESTIONS.length}`;
+}
+
+function disableInputs() {
+questionBody.querySelectorAll("button, select").forEach((el) => (el.disabled = true));
+}
+
+function registerCorrect(message) {
+answered += 1;
+correctCount += 1;
+const bonus = timeLeft * SPEED_BONUS;
+score += BASE_POINTS + bonus;
+feedback.textContent = `Correcto. +${BASE_POINTS + bonus} puntos. ${message}`;
+feedback.className = "feedback good";
+disableInputs();
+nextQuestion();
+}
+
+function registerWrong(message) {
+answered += 1;
+lives -= 1;
+score = Math.max(0, score - WRONG_PENALTY);
+feedback.textContent = `Incorrecto. -${WRONG_PENALTY} puntos. ${message}`;
+feedback.className = "feedback bad";
+disableInputs();
+if (lives <= 0) {
+endGame();
+return;
+}
+nextQuestion();
+}
+
+function endGame() {
+clearInterval(timer);
+questionText.textContent = "Juego terminado";
+questionBody.innerHTML = "<p>Te quedaste sin vidas. Puedes reiniciar para intentar de nuevo.</p>";
+typeBadge.textContent = "Resumen";
+feedback.textContent = `Puntuación final: ${score} puntos con ${correctCount} aciertos.`;
+feedback.className = "feedback";
+skipBtn.disabled = true;
+progressText.textContent = `Finalizado (${answered}/${QUESTIONS.length})`;
+}
+
+function nextQuestion() {
+updateStats();
+skipBtn.disabled = false;
+if (index >= QUESTIONS.length - 1) {
+clearInterval(timer);
+index = QUESTIONS.length;
+showSummary();
+return;
+}
+index += 1;
+setTimeout(renderQuestion, 600);
+}
+
+function showSummary() {
+questionText.textContent = "¡Terminaste la trivia!";
+typeBadge.textContent = "Resumen";
+questionBody.innerHTML = `
+<p>Tu puntuación final es <strong>${score}</strong>.</p>
+<p>Aciertos: ${correctCount} de ${QUESTIONS.length}.</p>
+<p>Precisión: ${accuracyEl.textContent}.</p>
+`;
+feedback.textContent = "Puedes reiniciar para mejorar tu puntuación.";
+feedback.className = "feedback good";
+skipBtn.disabled = true;
+progressText.textContent = `Finalizado (${answered}/${QUESTIONS.length})`;
+}
+
+function renderQuestion() {
+if (index >= QUESTIONS.length || lives <= 0) {
+return;
+}
+const q = currentQuestion();
+questionText.textContent = q.prompt;
+feedback.textContent = "Responde para ver retroalimentación.";
+feedback.className = "feedback";
+questionBody.innerHTML = "";
+
+if (q.type === "mcq") {
+typeBadge.textContent = "Opción múltiple";
+const options = document.createElement("div");
+options.className = "options";
+q.options.forEach((opt, idx) => {
+const btn = document.createElement("button");
+btn.className = "option";
+btn.textContent = opt;
+btn.addEventListener("click", () => {
+clearInterval(timer);
+if (idx === q.answer) {
+registerCorrect(q.explain);
+} else {
+registerWrong(q.explain);
+}
+});
+options.appendChild(btn);
+});
+questionBody.appendChild(options);
+} else if (q.type === "tf") {
+typeBadge.textContent = "Verdadero o falso";
+const options = document.createElement("div");
+options.className = "options";
+["Verdadero", "Falso"].forEach((label, idx) => {
+const btn = document.createElement("button");
+btn.className = "option";
+btn.textContent = label;
+btn.addEventListener("click", () => {
+clearInterval(timer);
+const userAnswer = idx === 0;
+if (userAnswer === q.answer) {
+registerCorrect(q.explain);
+} else {
+registerWrong(q.explain);
+}
+});
+options.appendChild(btn);
+});
+questionBody.appendChild(options);
+} else if (q.type === "match") {
+typeBadge.textContent = "Relacionar conceptos";
+const list = document.createElement("div");
+list.className = "match-grid";
+const rightOptions = shuffle(q.pairs.map((pair) => pair[1]));
+const selects = [];
+q.pairs.forEach((pair) => {
+const row = document.createElement("div");
+row.className = "match-row";
+const left = document.createElement("div");
+left.textContent = pair[0];
+const select = document.createElement("select");
+const placeholder = document.createElement("option");
+placeholder.value = "";
+placeholder.textContent = "Selecciona...";
+select.appendChild(placeholder);
+rightOptions.forEach((opt) => {
+const option = document.createElement("option");
+option.value = opt;
+option.textContent = opt;
+select.appendChild(option);
+});
+selects.push(select);
+row.appendChild(left);
+row.appendChild(select);
+list.appendChild(row);
+});
+
+const submitBtn = document.createElement("button");
+submitBtn.className = "btn";
+submitBtn.textContent = "Enviar relación";
+submitBtn.addEventListener("click", () => {
+clearInterval(timer);
+const userAnswers = selects.map((sel) => sel.value);
+if (userAnswers.some((val) => !val)) {
+feedback.textContent = "Completa todas las relaciones antes de enviar.";
+feedback.className = "feedback";
+startTimer();
+return;
+}
+const allCorrect = q.pairs.every((pair, i) => userAnswers[i] === pair[1]);
+if (allCorrect) {
+registerCorrect(q.explain);
+} else {
+registerWrong(q.explain);
+}
+});
+
+questionBody.appendChild(list);
+questionBody.appendChild(submitBtn);
+}
+
+updateStats();
+startTimer();
+}
+
+skipBtn.addEventListener("click", () => {
+clearInterval(timer);
+lives -= 1;
+feedback.textContent = "Saltaste la pregunta y perdiste una vida.";
+feedback.className = "feedback bad";
+if (lives <= 0) {
+endGame();
+} else {
+nextQuestion();
+}
+});
+
+restartBtn.addEventListener("click", () => {
+index = 0;
+score = 0;
+lives = START_LIVES;
+correctCount = 0;
+answered = 0;
+order.splice(0, order.length, ...shuffle([...Array(QUESTIONS.length).keys()]));
+renderQuestion();
+});
+
+renderQuestion();
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

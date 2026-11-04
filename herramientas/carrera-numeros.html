@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carrera de Números — 10 segundos</title>
+<style>
+:root{
+--bg:#0b1220; /* fondo oscuro elegante */
+--panel:#111a2b;
+--accent:#4cc9f0; /* cian */
+--accent2:#f72585; /* magenta */
+--line:#ffffff30;
+--finish:#ffd166; /* línea de meta */
+--ok:#06d6a0;
+--warn:#ffd166;
+--err:#ef476f;
+}
+*{box-sizing:border-box}
+body{
+margin:0; padding:16px; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif; background:linear-gradient(180deg,#0b1220,#0e1a33);
+color:#e5ecff; min-height:100svh; display:flex; flex-direction:column; gap:16px;
+}
+h1{margin:0; font-size:clamp(20px,2.6vw,28px); font-weight:800; letter-spacing:.3px}
+.app{display:grid; gap:16px}
+.controls{
+display:grid; gap:10px; background:var(--panel); border:1px solid #ffffff14; border-radius:16px; padding:14px;
+}
+.row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+label{font-weight:600; opacity:.95}
+input[type="text"], select{
+background:#0b1426; border:1px solid #ffffff1f; color:#eaf4ff; padding:10px 12px; border-radius:12px; min-width:260px; outline:none;
+}
+.hint{font-size:.88rem; opacity:.8}
+button{
+border:0; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; transition:transform .05s ease, opacity .2s ease;
+background:linear-gradient(135deg,var(--accent),#9b5de5); color:#041018; text-shadow:0 1px 0 #ffffff66;
+}
+button.secondary{background:#1b2a48; color:#dfe9ff; border:1px solid #ffffff1f; text-shadow:none}
+button:disabled{opacity:.5; cursor:not-allowed}
+button:active{transform:translateY(1px)}
+
+/* Pista */
+.track-wrap{position:relative; width:100%; background:var(--panel); border:1px solid #ffffff14; border-radius:18px; padding:12px 12px 18px}
+.meta{position:absolute; top:12px; bottom:18px; right:12px; width:8px; background:repeating-linear-gradient( to bottom, var(--finish) 0 12px, #0000 12px 24px ); border-radius:4px}
+.track{ display:grid; gap:10px; }
+.lane{
+position:relative; height:48px; background:linear-gradient(90deg,#0a1528,#0a1528); border:1px dashed var(--line); border-left:0; border-right:0; border-radius:12px; overflow:hidden;
+}
+.lane::before{ /* línea divisoria */
+content:""; position:absolute; inset:0; background:repeating-linear-gradient( to right, #ffffff0e 0 24px, #0000 24px 32px ); pointer-events:none
+}
+.car{
+--sz:40px; position:absolute; top:50%; left:0; transform:translate(0,-50%); width:var(--sz); height:var(--sz); border-radius:999px; display:grid; place-items:center; font-weight:900;
+color:#06121f; text-shadow:0 1px 0 #ffffffa0; box-shadow:0 4px 10px #00000060, inset 0 -6px 10px #00000030; border:2px solid #ffffff99;
+}
+.car .num{ font-variant-numeric:tabular-nums; }
+.flag{position:absolute; right:20px; top:8px; font-size:18px}
+
+/* Info */
+.info{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding-inline:4px}
+.timer{font:800 18px/1.2 system-ui; letter-spacing:.3px}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{padding:6px 10px; border-radius:999px; font-size:.85rem; background:#0b1426; border:1px solid #ffffff1f}
+
+/* Tabla de clasificación */
+.results{ background:var(--panel); border:1px solid #ffffff14; border-radius:16px; padding:12px; display:none }
+table{ width:100%; border-collapse:collapse; }
+th,td{ padding:8px 10px; border-bottom:1px solid #ffffff12; text-align:left }
+th{ font-size:.9rem; opacity:.9 }
+tr:last-child td{ border-bottom:0 }
+.tag{ font-weight:800; padding:2px 8px; border-radius:999px; background:#0b1426; border:1px solid #ffffff1f }
+.tag.win{ background:linear-gradient(135deg,var(--ok),#8cffd7); color:#003322 }
+.tag.tie{ background:linear-gradient(135deg,var(--warn),#ffe39b); color:#3a2a00 }
+
+/* Responsive */
+@media (max-width:640px){
+.lane{ height:56px }
+.car{ --sz:44px }
+}
+/* --- Modal (popup) --- */
+.modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1000}
+.modal.open{display:flex}
+.modal .backdrop{position:absolute; inset:0; background:#0009; backdrop-filter:blur(2px)}
+.modal .dialog{position:relative; background:var(--panel); border:1px solid #ffffff2a; border-radius:18px; width:min(1000px,96vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px #0008}
+.dialog header{position:sticky; top:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-bottom:1px solid #ffffff14; background:linear-gradient(180deg,#0f1a31,#0f1a31cc)}
+.dialog header h3{margin:0; font-size:1rem}
+.dialog .content{padding:12px 16px}
+.btn-close{background:#1b2a48; color:#dfe9ff; border:1px solid #ffffff1f; border-radius:10px; padding:6px 10px; cursor:pointer}
+.dialog footer{padding:12px 16px; border-top:1px solid #ffffff14; display:flex; justify-content:flex-end}
+</style>
+</head>
+<body>
+<h1>🎲 Carrera de Números — 10 segundos</h1>
+<div class="app">
+<section class="controls" aria-label="Controles de la carrera">
+<div class="row">
+<label for="nums">Números de los autos (máx. 10, separados por coma):</label>
+</div>
+<div class="row">
+<input id="nums" type="text" placeholder="Ej.: 1,2,3,4,5" />
+<button id="preset">Usar 1..10 (máx. 10)</button>
+</div>
+<div class="row hint">Cada auto representa un número. La carrera es aleatoria y <strong>siempre muestra resultados a los 10s</strong>.</div>
+<div class="row">
+<button id="start">Iniciar carrera</button>
+<button id="reset" class="secondary" disabled>Reiniciar</button>
+</div>
+</section>
+
+<div id="raceModal" class="modal" aria-hidden="true">
+<div class="backdrop" data-close="raceModal" aria-hidden="true"></div>
+<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="raceTitle">
+<header>
+<h3 id="raceTitle">🏁 Carrera en curso (10 s)</h3>
+<button class="btn-close" data-close="raceModal">Cerrar</button>
+</header>
+<div class="content">
+<section class="track-wrap" aria-label="Pista de carrera">
+<div class="meta" aria-hidden="true"></div>
+<div id="track" class="track"></div>
+<div class="info">
+<div class="timer">Tiempo: <span id="t">0.00</span> s</div>
+<div class="chips">
+<span class="chip">Duración fija: 10.00 s</span>
+<span class="chip">Avance aleatorio en vivo</span>
+</div>
+</div>
+</section>
+</div>
+<footer>
+<button class="btn-close" data-close="raceModal">Cerrar</button>
+</footer>
+</div>
+</div>
+
+<div id="resultsModal" class="modal" aria-hidden="true">
+<div class="backdrop" data-close="resultsModal" aria-hidden="true"></div>
+<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resultsTitle">
+<header>
+<h3 id="resultsTitle">🏆 Clasificación final</h3>
+<button class="btn-close" data-close="resultsModal">Cerrar</button>
+</header>
+<div class="content">
+<section id="results" class="results" aria-live="polite" aria-label="Resultados" style="display:block">
+<div id="summary" class="hint" style="margin-bottom:8px"></div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Número</th>
+<th>Tiempo (s)</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</section>
+</div>
+<footer>
+<button class="btn-close" data-close="resultsModal">Cerrar</button>
+</footer>
+</div>
+</div>
+</div>
+
+<script>
+// Utilidades
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+// Paleta para autos
+const COLORS = [
+'#ff6b6b','#4ecdc4','#ffe66d','#c77dff','#48cae4','#80ffdb','#f9c74f','#bdb2ff','#90be6d','#f94144'
+];
+
+const numsInput = $('#nums');
+const presetBtn = $('#preset');
+const startBtn = $('#start');
+const resetBtn = $('#reset');
+const trackEl = $('#track');
+const tLabel = $('#t');
+const resultsBox = $('#results');
+const tbody = $('#tbody');
+const summary = $('#summary');
+
+let state = {
+running:false,
+start:0,
+timerId:null,
+cars:[],
+duration:10000, // 10 seconds fixed
+finishedCount:0
+};
+
+function parseNumbers(){
+let raw = numsInput.value.trim();
+if(!raw){ return [] }
+let arr = raw.split(/\s*,\s*/).filter(v=>v!=="");
+// Normalizar a sólo dígitos / texto visible
+arr = arr.map(v=>String(v).slice(0,6)); // número corto/etiqueta (hasta 6 chars)
+// Unicidad y límite 10
+const seen = new Set();
+const out = [];
+for(const v of arr){
+const key = v;
+if(!seen.has(key)){
+seen.add(key);
+out.push(v);
+if(out.length>=10) break;
+}
+}
+return out;
+}
+
+function buildTrack(numbers){
+trackEl.innerHTML = '';
+trackEl.style.gridTemplateRows = `repeat(${numbers.length}, 1fr)`;
+state.cars = numbers.map((num,i)=>{
+const lane = document.createElement('div');
+lane.className = 'lane';
+lane.setAttribute('aria-label', `Carril del número ${num}`);
+
+const car = document.createElement('div');
+car.className = 'car';
+car.style.background = `linear-gradient(135deg, ${COLORS[i%COLORS.length]}, #ffffffaa)`;
+car.style.outline = 'none';
+car.tabIndex = 0;
+const span = document.createElement('div');
+span.className = 'num';
+span.textContent = num;
+car.appendChild(span);
+lane.appendChild(car);
+
+trackEl.appendChild(lane);
+
+return {
+num,
+idx:i,
+lane,
+el:car,
+pos:0, // px
+finished:false,
+finishTime:null,
+factor: 0.85 + Math.random()*0.5, // factor de velocidad por auto (0.85..1.35)
+lastNoise:1,
+distanceAtEnd:0
+};
+});
+}
+
+function getMaxX(){
+// espacio útil hasta la línea de meta menos el ancho del auto
+const lane = trackEl.querySelector('.lane');
+if(!lane) return 0;
+const wrap = trackEl.closest('.track-wrap');
+const meta = wrap.querySelector('.meta');
+const laneRect = lane.getBoundingClientRect();
+const metaRect = meta.getBoundingClientRect();
+const carSz = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sz')) || 40;
+// Distancia desde el inicio del carril (padding dentro de track-wrap es 12px) hasta borde izq. de meta - (margen) - ancho auto
+const max = (metaRect.left - laneRect.left) - 18 - carSz; // 18 de margen de seguridad
+return Math.max(20, max);
+}
+
+function startRace(){
+const numbers = parseNumbers();
+if(numbers.length===0){
+alert('Ingresa al menos un número (máximo 10), separados por coma.');
+return;
+}
+resultsBox.style.display='none';
+tbody.innerHTML='';
+summary.textContent='';
+
+buildTrack(numbers);
+state.running = true;
+state.finishedCount = 0;
+state.start = performance.now();
+const maxX = getMaxX();
+
+// Colocar al inicio
+state.cars.forEach(c=>{
+c.pos = 0;
+c.finished = false;
+c.finishTime = null;
+c.el.style.transform = `translate(0,-50%)`;
+});
+
+startBtn.disabled = true;
+resetBtn.disabled = true;
+numsInput.disabled = true;
+presetBtn.disabled = true;
+
+const baseSpeed = maxX / (state.duration/1000); // px por segundo para llegar justo a 10s
+
+function tick(now){
+if(!state.running) return;
+const elapsed = now - state.start;
+const dt = Math.min(60, Math.max(16, now - (state._lastNow||now))); // ~16-60ms
+state._lastNow = now;
+
+// Actualizar cada auto con ruido
+state.cars.forEach(c=>{
+if(c.finished) return;
+// Ruido multiplicativo suave
+const noise = 0.7 + Math.random()*0.9; // 0.7..1.6
+const v = baseSpeed * c.factor * noise; // px/s
+c.pos += v * (dt/1000);
+if(c.pos >= maxX){
+c.pos = maxX;
+c.finished = true;
+c.finishTime = Math.min( (elapsed/1000), (state.duration/1000) );
+state.finishedCount++;
+}
+c.el.style.transform = `translate(${c.pos}px,-50%)`;
+});
+
+// Tiempo UI
+tLabel.textContent = (Math.min(elapsed, state.duration)/1000).toFixed(2);
+
+if(elapsed < state.duration){
+requestAnimationFrame(tick);
+} else {
+// Fuerza cierre a los 10s exactos
+state.running = false;
+finalize(maxX);
+}
+}
+
+requestAnimationFrame(tick);
+}
+
+function finalize(maxX){
+// Para quienes no llegaron, registrar su distancia a los 10s y NO moverlos a la meta
+state.cars.forEach(c=>{
+c.distanceAtEnd = c.pos; // para desempate
+if(!c.finished){
+c.finishTime = 10.00; // llegaron justo al corte de 10s (o no alcanzaron la meta)
+}
+});
+
+// Orden: 1) quienes cruzaron antes (finishTime < 10) por tiempo asc
+// 2) quienes quedaron al corte (==10) por distancia descendente
+const finished = state.cars.filter(c=>c.finishTime < 10);
+const cutoff = state.cars.filter(c=>c.finishTime >= 10);
+finished.sort((a,b)=>a.finishTime - b.finishTime);
+cutoff.sort((a,b)=> b.distanceAtEnd - a.distanceAtEnd);
+const ordered = [...finished, ...cutoff];
+
+// Render resultados
+tbody.innerHTML = '';
+ordered.forEach((c,rankIdx)=>{
+const tr = document.createElement('tr');
+const tdPos = document.createElement('td');
+tdPos.textContent = rankIdx+1;
+const tdNum = document.createElement('td');
+tdNum.textContent = c.num;
+const tdTime = document.createElement('td');
+tdTime.textContent = c.finishTime.toFixed(2);
+const tdNote = document.createElement('td');
+const note = document.createElement('span');
+note.className = 'tag';
+if(c.finishTime < 10){
+note.textContent = (rankIdx===0? 'Ganador' : 'Llegó a la meta');
+if(rankIdx===0) note.classList.add('win');
+} else {
+// empate por tiempo (corte 10s): indicar por distancia
+if(rankIdx===0 && finished.length===0){
+note.textContent = 'Empate por distancia (corte 10s)';
+note.classList.add('tie');
+} else {
+note.textContent = 'Corte 10s (orden por distancia)';
+note.classList.add('tie');
+}
+}
+tdNote.appendChild(note);
+tr.append(tdPos,tdNum,tdTime,tdNote);
+tbody.appendChild(tr);
+});
+
+const winners = ordered.slice(0,3).map(c=>c.num).join(', ');
+const finishedCount = finished.length;
+summary.textContent = `Ganadores: ${winners || 'definidos por distancia al corte'} · Llegaron a la meta antes del corte: ${finishedCount}/${state.cars.length}`;
+
+resultsBox.style.display = 'block';
+
+// Habilitar botones
+startBtn.disabled = false;
+resetBtn.disabled = false;
+numsInput.disabled = false;
+presetBtn.disabled = false;
+}
+
+function resetAll(){
+state.running = false;
+cancelAnimationFrame(state._lastNow);
+tLabel.textContent = '0.00';
+trackEl.innerHTML = '';
+resultsBox.style.display='none';
+tbody.innerHTML='';
+summary.textContent='';
+startBtn.disabled = false;
+resetBtn.disabled = true;
+numsInput.disabled = false;
+presetBtn.disabled = false;
+}
+
+// Eventos UI
+presetBtn.addEventListener('click', ()=>{
+const preset = Array.from({length:10},(_,i)=>String(i+1)).join(',');
+numsInput.value = preset;
+});
+
+startBtn.addEventListener('click', ()=>{
+const nums = parseNumbers();
+if(nums.length===0){
+alert('Por favor ingresa entre 1 y 10 números (separados por comas).');
+return;
+}
+startRace();
+});
+
+resetBtn.addEventListener('click', resetAll);
+
+// Accesibilidad: Enter lanza carrera desde input
+numsInput.addEventListener('keydown', (e)=>{
+if(e.key==='Enter'){
+e.preventDefault();
+startBtn.click();
+}
+});
+
+// Sugerencia inicial
+numsInput.placeholder = 'Ej.: 1,2,3,4 (o nombres cortos: A,B,C)';
+// --- Modal helpers ---
+function openModal(id){
+const m = document.getElementById(id);
+if(!m) return;
+m.classList.add('open');
+m.setAttribute('aria-hidden','false');
+// focus first focusable
+const btn = m.querySelector('.btn-close');
+if(btn) btn.focus();
+}
+function closeModal(id){
+const m = document.getElementById(id);
+if(!m) return;
+m.classList.remove('open');
+m.setAttribute('aria-hidden','true');
+}
+document.addEventListener('click', (e)=>{
+const closeId = e.target.getAttribute('data-close');
+if(closeId){ closeModal(closeId); }
+});
+document.addEventListener('keydown',(e)=>{
+if(e.key==='Escape'){
+closeModal('raceModal');
+closeModal('resultsModal');
+}
+});
+
+// Abrir carrera en popup al iniciar
+const _origStartRace = startRace;
+startRace = function(){
+openModal('raceModal');
+_origStartRace();
+}
+
+// Abrir resultados al finalizar
+const _origFinalize = finalize;
+finalize = function(maxX){
+_origFinalize(maxX);
+openModal('resultsModal');
+}
+
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

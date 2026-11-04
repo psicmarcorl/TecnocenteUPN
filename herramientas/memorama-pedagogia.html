@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memorama de Pedagogía</title>
+<!-- Incluimos Tailwind CSS desde su CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Estilos para la fuente (Usamos Inter, una fuente limpia) */
+body {
+font-family: 'Inter', sans-serif;
+}
+
+/* * Estilos para la animación de voltear la carta (flip)
+* Usamos perspectiva para el efecto 3D
+*/
+.card {
+perspective: 1000px;
+}
+
+.card-inner {
+position: relative;
+width: 100%;
+height: 100%;
+transition: transform 0.6s;
+transform-style: preserve-3d;
+}
+
+/* Clase que se añade con JS para voltear la carta */
+.card.flipped .card-inner {
+transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+position: absolute;
+width: 100%;
+height: 100%;
+backface-visibility: hidden; /* Oculta la cara trasera mientras voltea */
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+border-radius: 0.5rem; /* 8px */
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Cara frontal de la carta (la que se ve al inicio) */
+.card-front {
+background-color: #3b82f6; /* bg-blue-600 */
+color: white;
+}
+
+/* Cara trasera de la carta (el concepto) */
+.card-back {
+background-color: #e0f2fe; /* bg-sky-100 */
+color: #0c4a6e; /* text-sky-900 */
+transform: rotateY(180deg);
+padding: 0.5rem; /* 8px */
+}
+
+/* Estilo para las cartas que ya hicieron match */
+.card.matched .card-back {
+background-color: #dcfce7; /* bg-green-100 */
+color: #166534; /* text-green-800 */
+border: 2px solid #22c55e; /* border-green-500 */
+}
+</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+<!-- Contenedor principal del juego -->
+<main class="bg-white p-6 md:p-8 rounded-xl shadow-2xl text-center max-w-4xl w-full">
+
+<h1 class="text-3xl md:text-4xl font-bold text-blue-700 mb-2">Memorama de Pedagogía</h1>
+<p class="text-gray-600 mb-6">Encuentra los pares de conceptos y autores.</p>
+
+<!-- Información del juego: Intentos -->
+<div class="mb-6 text-xl font-semibold text-gray-700">
+Intentos: <span id="tries" class="text-blue-600">0</span>
+</div>
+
+<!-- Tablero del juego (aquí se generan las cartas con JS) -->
+<div id="game-board" class="grid grid-cols-4 gap-3 md:gap-4 max-w-xl mx-auto mb-6">
+<!-- Las cartas se generarán aquí dinámicamente -->
+</div>
+
+<!-- Botón de Reinicio -->
+<button id="reset-button" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105">
+Reiniciar Juego
+</button>
+
+</main>
+
+<!-- Modal de Victoria (oculto por defecto) -->
+<div id="victory-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden">
+<div class="bg-white p-8 rounded-lg shadow-xl text-center transform transition-all scale-95 opacity-0" id="modal-content">
+<h2 class="text-3xl font-bold text-green-600 mb-4">¡Felicidades!</h2>
+<p class="text-lg text-gray-700 mb-6">
+Completaste el memorama en <span id="final-tries" class="font-bold">0</span> intentos.
+</p>
+<button id="close-modal" class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-300">
+Jugar de nuevo
+</button>
+</div>
+</div>
+
+<script>
+// --- INICIO DEL SCRIPT DEL JUEGO ---
+
+// Esperamos a que todo el HTML esté cargado
+document.addEventListener('DOMContentLoaded', () => {
+
+// --- 1. Definición de conceptos ---
+// Aquí definimos los pares. Puedes cambiar, añadir o quitar pares fácilmente.
+const conceptPairs = {
+'Piaget': 'Constructivismo',
+'Vygotsky': 'Zona de Desarrollo Próximo',
+'Ausubel': 'Aprendizaje Significativo',
+'Skinner': 'Condicionamiento Operante',
+'Bloom': 'Taxonomía de Objetivos',
+'Didáctica': 'Arte de Enseñar',
+'Evaluación': 'Medir Aprendizaje',
+'Currículo': 'Plan de Estudios'
+};
+
+// --- 2. Variables Globales del Juego ---
+let cards = []; // Array para guardar las cartas generadas
+let flippedCards = []; // Almacena las 2 cartas volteadas temporalmente
+let matchedPairs = 0; // Contador de pares encontrados
+let tries = 0; // Contador de intentos
+let lockBoard = false; // Bloquea el tablero mientras se comparan cartas
+
+// --- 3. Elementos del DOM ---
+const gameBoard = document.getElementById('game-board');
+const triesDisplay = document.getElementById('tries');
+const resetButton = document.getElementById('reset-button');
+const victoryModal = document.getElementById('victory-modal');
+const modalContent = document.getElementById('modal-content');
+const finalTriesDisplay = document.getElementById('final-tries');
+const closeModalButton = document.getElementById('close-modal');
+
+// Icono para el frente de la carta (un birrete)
+const cardFrontIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 md:h-12 md:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+<path d="M12 14l9-5-9-5-9 5 9 5z" />
+<path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+</svg>
+`;
+
+// --- 4. Funciones Principales del Juego ---
+
+/**
+* Inicializa y crea el tablero de juego
+*/
+function createBoard() {
+// Reiniciamos contadores y el tablero
+resetGameVariables();
+gameBoard.innerHTML = '';
+cards = [];
+
+// Creamos un array con todos los conceptos (autores y definiciones)
+const concepts = [...Object.keys(conceptPairs), ...Object.values(conceptPairs)];
+
+// Barajamos el array
+const shuffledConcepts = shuffle(concepts);
+
+// Creamos los elementos HTML de las cartas
+shuffledConcepts.forEach(concept => {
+const cardElement = document.createElement('div');
+cardElement.classList.add('card', 'h-24', 'md:h-28'); // Tamaño de la carta
+cardElement.dataset.concept = concept; // Guardamos el concepto en el data-attribute
+
+cardElement.innerHTML = `
+<div class="card-inner">
+<div class="card-front">
+${cardFrontIcon}
+</div>
+<div class="card-back text-sm md:text-base font-semibold">
+${concept}
+</div>
+</div>
+`;
+
+// Añadimos el evento de click a cada carta
+cardElement.addEventListener('click', handleCardClick);
+gameBoard.appendChild(cardElement);
+cards.push(cardElement);
+});
+}
+
+/**
+* Mezcla un array (Algoritmo Fisher-Yates)
+*/
+function shuffle(array) {
+for (let i = array.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[array[i], array[j]] = [array[j], array[i]];
+}
+return array;
+}
+
+/**
+* Maneja el evento de click en una carta
+*/
+function handleCardClick(event) {
+const clickedCard = event.currentTarget;
+
+// Si el tablero está bloqueado, la carta ya está volteada o ya hizo match, no hacemos nada
+if (lockBoard || flippedCards.includes(clickedCard) || clickedCard.classList.contains('matched')) {
+return;
+}
+
+// Volteamos la carta
+clickedCard.classList.add('flipped');
+flippedCards.push(clickedCard);
+
+// Si ya tenemos dos cartas volteadas, comprobamos si son par
+if (flippedCards.length === 2) {
+lockBoard = true; // Bloqueamos el tablero
+updateTries();
+checkForMatch();
+}
+}
+
+/**
+* Comprueba si las dos cartas volteadas son un par
+*/
+function checkForMatch() {
+const [card1, card2] = flippedCards;
+const concept1 = card1.dataset.concept;
+const concept2 = card2.dataset.concept;
+
+// Comprobamos si son par (usando el objeto conceptPairs)
+const isMatch = conceptPairs[concept1] === concept2 || conceptPairs[concept2] === concept1;
+
+if (isMatch) {
+disableCards();
+} else {
+unflipCards();
+}
+}
+
+/**
+* Se ejecuta si las cartas son un par (match)
+*/
+function disableCards() {
+flippedCards[0].classList.add('matched');
+flippedCards[1].classList.add('matched');
+
+matchedPairs++;
+resetBoardState();
+
+// Comprobamos si el juego ha terminado
+if (matchedPairs === Object.keys(conceptPairs).length) {
+setTimeout(showVictoryModal, 500); // Mostramos modal de victoria
+}
+}
+
+/**
+* Se ejecuta si las cartas NO son un par
+*/
+function unflipCards() {
+// Esperamos un momento antes de voltearlas de nuevo
+setTimeout(() => {
+flippedCards[0].classList.remove('flipped');
+flippedCards[1].classList.remove('flipped');
+resetBoardState();
+}, 1200);
+}
+
+/**
+* Actualiza el contador de intentos
+*/
+function updateTries() {
+tries++;
+triesDisplay.textContent = tries;
+}
+
+/**
+* Resetea las variables de estado del turno
+*/
+function resetBoardState() {
+flippedCards = [];
+lockBoard = false;
+}
+
+/**
+* Resetea las variables globales del juego
+*/
+function resetGameVariables() {
+flippedCards = [];
+matchedPairs = 0;
+tries = 0;
+lockBoard = false;
+triesDisplay.textContent = '0';
+}
+
+/**
+* Muestra el modal de victoria
+*/
+function showVictoryModal() {
+finalTriesDisplay.textContent = tries;
+victoryModal.classList.remove('hidden');
+// Pequeña animación de entrada
+setTimeout(() => {
+modalContent.classList.remove('scale-95', 'opacity-0');
+modalContent.classList.add('scale-100', 'opacity-100');
+}, 100); // 100ms de espera
+}
+
+/**
+* Oculta el modal de victoria
+*/
+function hideVictoryModal() {
+modalContent.classList.remove('scale-100', 'opacity-100');
+modalContent.classList.add('scale-95', 'opacity-0');
+setTimeout(() => {
+victoryModal.classList.add('hidden');
+}, 300); // Espera a que termine la animación de salida
+}
+
+/**
+* Función para reiniciar el juego completo
+*/
+function restartGame() {
+hideVictoryModal();
+// Damos tiempo a que el modal se oculte antes de recrear el tablero
+setTimeout(createBoard, 300);
+}
+
+// --- 5. Event Listeners de Botones ---
+resetButton.addEventListener('click', restartGame);
+closeModalButton.addEventListener('click', restartGame);
+
+// --- 6. Iniciar el juego por primera vez ---
+createBoard();
+
+}); // Fin del 'DOMContentLoaded'
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

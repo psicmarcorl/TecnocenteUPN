@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Generador de equipos aleatorios</title>
+<style>
+:root {
+--bg: #0f172a; /* slate-900 */
+--panel: #111827; /* gray-900 */
+--muted: #94a3b8; /* slate-400 */
+--text: #e5e7eb; /* gray-200 */
+--accent: #22d3ee; /* cyan-400 */
+--accent-2: #38bdf8; /* sky-400 */
+--ok: #34d399; /* emerald-400 */
+--warn: #f59e0b; /* amber-500 */
+--err: #ef4444; /* red-500 */
+--card: #0b1220; /* dark card */
+--border: #1f2937; /* gray-800 */
+}
+* { box-sizing: border-box; }
+body {
+margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+background: radial-gradient(1200px 800px at 20% -10%, #1e293b 0%, var(--bg) 40%), var(--bg);
+color: var(--text);
+}
+header {
+padding: 28px 20px 10px; text-align: center;
+}
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: 0.2px; }
+p.lead { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+.container { max-width: 1100px; margin: 18px auto 40px; padding: 0 18px; }
+
+.panel {
+background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+border: 1px solid var(--border);
+border-radius: 16px; padding: 18px; display: grid; gap: 16px;
+}
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 900px) {
+.grid { grid-template-columns: 1.2fr 1fr; }
+}
+
+label { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 6px; }
+textarea, input, select { width: 100%; padding: 12px 12px; border-radius: 12px; border: 1px solid var(--border); background: #0a0f1a; color: var(--text); outline: none; }
+textarea { min-height: 210px; resize: vertical; line-height: 1.35; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.controls { display: grid; gap: 12px; }
+
+.row { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .row { grid-template-columns: 1.1fr 1fr; } }
+
+.help { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+.btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button {
+padding: 10px 14px; border: 1px solid var(--border); background: #0b1322; color: var(--text);
+border-radius: 12px; cursor: pointer; transition: transform .02s ease, border-color .15s ease;
+}
+button.primary { border-color: transparent; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #071014; font-weight: 700; }
+button:active { transform: translateY(1px); }
+button.ghost { background: transparent; }
+
+.status { font-size: 0.9rem; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.err { color: var(--err); }
+
+.results {
+margin-top: 24px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.team {
+background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 14px 10px;
+box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.team h3 { margin: 0 0 10px; font-size: 1.02rem; letter-spacing: .2px; }
+.team small { color: var(--muted); }
+.team ol { margin: 8px 0 0 20px; padding: 0; }
+
+.footer-note { color: var(--muted); font-size: .85rem; margin-top: 16px; }
+
+.pill { display: inline-block; font-size: .75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+<h1>🎲 Generador de equipos aleatorios</h1>
+<p class="lead">Pega la lista de alumnos, elige cómo quieres formar equipos, y ¡dale en <strong>Generar</strong>!</p>
+</header>
+
+<main class="container">
+<section class="panel grid" aria-label="Herramienta de generación de equipos">
+<div>
+<label for="names">Nombres de alumnos</label>
+<textarea id="names" placeholder="Escribe o pega aquí los nombres. Uno por línea.
+Ejemplo:
+Ana Pérez
+Juan López
+María Martínez
+..."></textarea>
+<div class="help">Consejo: también puedes separar por comas o punto y coma; se limpiarán espacios automáticamente.</div>
+</div>
+
+<div class="controls" role="group" aria-labelledby="config-title">
+<h2 id="config-title" style="margin:0; font-size:1rem; color:var(--muted);">Configuración</h2>
+
+<div class="row">
+<div>
+<label for="mode">Modo de asignación</label>
+<select id="mode" aria-label="Selecciona el modo de asignación">
+<option value="byTeams">Por número de equipos</option>
+<option value="bySize">Por tamaño de equipo</option>
+</select>
+<div class="help">Elige si quieres fijar cuántos equipos habrá o cuántas personas por equipo.</div>
+</div>
+<div>
+<label for="amount" id="amountLabel">Número de equipos</label>
+<input id="amount" type="number" min="1" step="1" value="4" />
+<div class="help" id="amountHelp">Ejemplo: 4 equipos.</div>
+</div>
+</div>
+
+<div class="btns">
+<button class="primary" id="generate">Generar equipos</button>
+<button class="ghost" id="shuffle">Mezclar de nuevo</button>
+<button class="ghost" id="copy">Copiar resultados</button>
+<button class="ghost" id="download">Descargar CSV</button>
+<button class="ghost" id="clear">Limpiar</button>
+<span id="status" class="status" aria-live="polite"></span>
+</div>
+<div>
+<span class="pill" id="summaryPill" hidden>0 alumnos • 0 equipos</span>
+</div>
+</div>
+</section>
+
+<section id="output" class="results" aria-live="polite" aria-label="Organización de equipos">
+<!-- Teams render here -->
+</section>
+
+<p class="footer-note">Distribución equitativa: si no se dividen exacto, algunos equipos recibirán 1 persona extra para balancear lo más posible.</p>
+</main>
+
+<script>
+const $ = (q) => document.querySelector(q);
+const namesEl = $('#names');
+const modeEl = $('#mode');
+const amountEl = $('#amount');
+const amountLabel = $('#amountLabel');
+const amountHelp = $('#amountHelp');
+const generateBtn = $('#generate');
+const shuffleBtn = $('#shuffle');
+const copyBtn = $('#copy');
+const downloadBtn = $('#download');
+const clearBtn = $('#clear');
+const output = $('#output');
+const statusEl = $('#status');
+const summaryPill = $('#summaryPill');
+
+function parseNames(raw) {
+if (!raw) return [];
+// Split by newline, comma, or semicolon
+const parts = raw.split(/[\n,;]+/g).map(s => s.trim()).filter(Boolean);
+// Normalize inner whitespace to single spaces
+return parts.map(s => s.replace(/\s+/g, ' '));
+}
+
+function shuffle(array) {
+const arr = array.slice();
+for (let i = arr.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[arr[i], arr[j]] = [arr[j], arr[i]];
+}
+return arr;
+}
+
+function chunkByTeams(students, numTeams) {
+numTeams = Math.max(1, Math.min(numTeams, students.length || 1));
+const base = Math.floor(students.length / numTeams);
+const rest = students.length % numTeams;
+const teams = Array.from({ length: numTeams }, () => []);
+let idx = 0;
+for (let t = 0; t < numTeams; t++) {
+const size = base + (t < rest ? 1 : 0);
+for (let k = 0; k < size; k++) teams[t].push(students[idx++]);
+}
+return teams;
+}
+
+function chunkBySize(students, teamSize) {
+teamSize = Math.max(1, teamSize);
+const teams = [];
+for (let i = 0; i < students.length; i += teamSize) {
+teams.push(students.slice(i, i + teamSize));
+}
+return teams;
+}
+
+function renderTeams(teams) {
+output.innerHTML = '';
+teams.forEach((team, i) => {
+const card = document.createElement('article');
+card.className = 'team';
+const title = document.createElement('h3');
+title.textContent = `Equipo ${i + 1}`;
+const meta = document.createElement('small');
+meta.textContent = `${team.length} integrante${team.length === 1 ? '' : 's'}`;
+const list = document.createElement('ol');
+team.forEach(name => {
+const li = document.createElement('li');
+li.textContent = name;
+list.appendChild(li);
+});
+card.appendChild(title);
+card.appendChild(meta);
+card.appendChild(list);
+output.appendChild(card);
+});
+}
+
+function generate() {
+status('');
+const names = parseNames(namesEl.value);
+if (names.length === 0) return status('Agrega al menos 1 nombre.', 'warn');
+
+const shuffled = shuffle(names);
+const amount = parseInt(amountEl.value, 10);
+if (!Number.isFinite(amount) || amount < 1) return status('El número ingresado no es válido.', 'err');
+
+let teams = [];
+if (modeEl.value === 'byTeams') {
+teams = chunkByTeams(shuffled, amount);
+} else {
+teams = chunkBySize(shuffled, amount);
+}
+renderTeams(teams);
+summary(`${names.length} alumno${names.length===1?'':'s'} • ${teams.length} equipo${teams.length===1?'':'s'}`);
+window.__lastTeams = teams;
+}
+
+function status(msg, kind='') {
+statusEl.textContent = msg;
+statusEl.className = `status ${kind}`.trim();
+}
+
+function summary(msg) {
+summaryPill.textContent = msg;
+summaryPill.hidden = !msg;
+}
+
+function copyResults() {
+const teams = window.__lastTeams || [];
+if (!teams.length) return status('Primero genera los equipos.', 'warn');
+const lines = [];
+teams.forEach((team, i) => {
+lines.push(`Equipo ${i+1} (${team.length})`);
+team.forEach(n => lines.push(` - ${n}`));
+});
+const text = lines.join('\n');
+navigator.clipboard.writeText(text).then(() => status('Resultados copiados al portapapeles.', 'ok')).catch(() => status('No se pudo copiar.', 'err'));
+}
+
+function downloadCSV() {
+const teams = window.__lastTeams || [];
+if (!teams.length) return status('Primero genera los equipos.', 'warn');
+const rows = [['Equipo', 'Integrante']];
+teams.forEach((team, i) => team.forEach(n => rows.push([`Equipo ${i+1}`, n])));
+const csv = rows.map(r => r.map(cell => {
+const s = String(cell ?? '');
+return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}).join(',')).join('\n');
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url; a.download = 'equipos.csv'; a.click();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+status('CSV descargado.', 'ok');
+}
+
+function clearAll() {
+namesEl.value = '';
+output.innerHTML = '';
+summary('');
+status('Listo para empezar.');
+amountEl.value = 4;
+window.__lastTeams = [];
+}
+
+// UI reactions
+modeEl.addEventListener('change', () => {
+if (modeEl.value === 'byTeams') {
+amountLabel.textContent = 'Número de equipos';
+amountHelp.textContent = 'Ejemplo: 4 equipos.';
+} else {
+amountLabel.textContent = 'Tamaño de cada equipo';
+amountHelp.textContent = 'Ejemplo: 3 personas por equipo.';
+}
+});
+
+generateBtn.addEventListener('click', generate);
+shuffleBtn.addEventListener('click', () => {
+// Mezclar y re-renderizar manteniendo configuración
+const names = parseNames(namesEl.value);
+if (!names.length) return status('Agrega nombres para mezclar.', 'warn');
+namesEl.value = shuffle(names).join('\n');
+status('Lista mezclada. Ahora puedes generar los equipos.', 'ok');
+});
+copyBtn.addEventListener('click', copyResults);
+downloadBtn.addEventListener('click', downloadCSV);
+clearBtn.addEventListener('click', clearAll);
+
+// Calidad de vida: Ctrl/Cmd+Enter para generar
+document.addEventListener('keydown', (e) => {
+const meta = e.ctrlKey || e.metaKey;
+if (meta && e.key === 'Enter') generate();
+});
+
+// Demo (puedes borrar)
+namesEl.value = [
+'Ana Pérez','Juan López','María Martínez','Luis García','Sofía Ramírez','Carlos Díaz','Ximena Torres','Diego Hernández','Valeria Castillo','Miguel Cruz','Fernanda Reyes','Jorge Romero'
+].join('\n');
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crucigrama Erikson (Móvil)</title>
+<style>
+:root {
+--bg-1: #fff1dc;
+--bg-2: #f3e6ff;
+--bg-3: #e2f5ff;
+--ink: #1f1f2b;
+--accent: #ff7a59;
+--accent-2: #5b7cfa;
+--accent-3: #24b07c;
+--cell: #fffaf2;
+--cell-2: #fdf0ff;
+--cell-3: #eef9ff;
+--blocked: #c4c9d4;
+--shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+margin: 0;
+font-family: "Trebuchet MS", "Verdana", sans-serif;
+color: var(--ink);
+background:
+radial-gradient(circle at top left, var(--bg-2), transparent 45%),
+radial-gradient(circle at top right, var(--bg-3), transparent 50%),
+linear-gradient(160deg, var(--bg-1), #ffffff 55%);
+min-height: 100vh;
+padding: 16px;
+}
+
+.wrap {
+grid-template-columns: minmax(0, 1fr);
+max-width: 980px;
+margin: 0 auto;
+display: grid;
+gap: 14px;
+}
+
+.panel {
+background: #ffffffcc;
+border: 2px solid #efe2ff;
+border-radius: 16px;
+padding: 14px;
+box-shadow: var(--shadow);
+backdrop-filter: blur(6px);
+}
+
+h1 { margin: 0 0 6px; font-size: 22px; }
+p { margin: 6px 0; }
+
+.grid-wrap {
+overflow: auto;
+padding-bottom: 4px;
+}
+
+.grid {
+display: grid;
+gap: 3px;
+padding: 10px;
+border-radius: 14px;
+background: linear-gradient(135deg, #ffe8d1, #f7e9ff 50%, #e9f6ff);
+box-shadow: inset 0 0 0 2px #f1d9ff;
+width: max-content;
+margin: 0 auto;
+}
+
+.cell {
+position: relative;
+border-radius: 7px;
+background: var(--cell);
+box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+display: grid;
+place-items: center;
+}
+
+.cell.variant-2 { background: var(--cell-2); }
+.cell.variant-3 { background: var(--cell-3); }
+
+.cell input {
+width: 100%;
+height: 100%;
+border: none;
+border-radius: 7px;
+background: transparent;
+font-size: 16px;
+text-transform: uppercase;
+text-align: center;
+font-weight: 700;
+color: var(--ink);
+outline: none;
+}
+
+.cell .num {
+position: absolute;
+top: 3px;
+left: 5px;
+font-size: 9px;
+font-weight: 700;
+color: #5c5c72;
+}
+
+.blocked {
+background: var(--blocked);
+border-radius: 7px;
+box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.cell.correct input { background: #d8f7ea; }
+.cell.incorrect input { background: #ffe0e0; }
+
+.controls {
+display: grid;
+gap: 10px;
+}
+
+.controls button {
+width: 100%;
+border: none;
+padding: 12px 14px;
+border-radius: 12px;
+font-size: 15px;
+cursor: pointer;
+color: #fff;
+font-weight: 700;
+letter-spacing: 0.3px;
+box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+.controls .hint-btn { background: var(--accent-2); }
+.controls .check-btn { background: var(--accent-3); }
+.controls .reset-btn { background: var(--accent); }
+.controls .start-btn { background: #6d28d9; }
+
+.timer {
+font-variant-numeric: tabular-nums;
+font-weight: 700;
+font-size: 16px;
+color: #1d3557;
+padding: 6px 10px;
+border-radius: 12px;
+background: #e9f0ff;
+display: inline-block;
+}
+
+.legend {
+display: grid;
+gap: 6px;
+font-size: 12px;
+}
+
+.chip {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 5px 8px;
+border-radius: 999px;
+background: #fff1dc;
+border: 1px solid #ffd7b1;
+font-size: 11px;
+font-weight: 700;
+color: #5a4030;
+width: fit-content;
+}
+
+.modal {
+position: fixed;
+inset: 0;
+display: none;
+align-items: center;
+justify-content: center;
+padding: 16px;
+background: rgba(20, 20, 40, 0.6);
+z-index: 10;
+}
+
+.modal.active { display: flex; }
+
+.modal-card {
+background: #fff;
+border-radius: 14px;
+padding: 16px;
+max-width: 520px;
+width: 100%;
+box-shadow: var(--shadow);
+border: 2px solid #f2dcff;
+}
+
+.clues {
+display: grid;
+gap: 10px;
+font-size: 13px;
+}
+
+.clues ul {
+list-style: none;
+padding: 0;
+margin: 6px 0 0;
+display: grid;
+gap: 6px;
+}
+
+.clues li {
+padding: 6px 8px;
+border-radius: 10px;
+background: #f5f5ff;
+border: 1px solid #e2e2ff;
+}
+
+.success {
+font-size: 16px;
+font-weight: 700;
+color: #1b4332;
+}
+
+@media (min-width: 860px) {
+.wrap { grid-template-columns: minmax(0, 1fr) 320px; }
+h1 { font-size: 26px; }
+.controls { position: sticky; top: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="panel">
+<header>
+<h1>Crucigrama: Etapas Psicosociales de Erik Erikson</h1>
+<p>Versión móvil adaptable y jugable.</p>
+<span class="chip">Tema: Erikson</span>
+</header>
+<div class="grid-wrap">
+<div class="grid" id="grid" aria-label="Crucigrama"></div>
+</div>
+</section>
+
+<aside class="panel controls">
+<h2>Panel</h2>
+<p>Tiempo: <span class="timer" id="timer">00:00</span></p>
+<label style="display:block; font-weight:700;">
+Dificultad
+<select id="difficulty" style="width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid #e2d9ff; font-weight:700;">
+<option value="easy">Fácil</option>
+<option value="medium" selected>Media</option>
+<option value="hard">Difícil</option>
+</select>
+</label>
+<div class="legend">
+<span class="chip" id="wordCount">8 palabras</span>
+<span class="chip">Horizontal y vertical</span>
+<span class="chip" id="difficultyLabel">Dificultad media</span>
+</div>
+<button class="start-btn" id="startBtn">Iniciar</button>
+<button class="hint-btn" id="hintBtn">Pistas</button>
+<button class="check-btn" id="checkBtn">Comprobar respuestas</button>
+<button class="reset-btn" id="resetBtn">Reiniciar</button>
+<p id="status" style="margin:0; font-weight:700;"></p>
+</aside>
+</div>
+
+<div class="modal" id="hintModal" aria-hidden="true">
+<div class="modal-card">
+<h2>Pistas</h2>
+<div class="clues">
+<div>
+<h3>Horizontales</h3>
+<ul id="acrossClues"></ul>
+</div>
+<div>
+<h3>Verticales</h3>
+<ul id="downClues"></ul>
+</div>
+</div>
+<button class="reset-btn" id="closeHints" style="margin-top:12px;">Cerrar</button>
+</div>
+</div>
+
+<div class="modal" id="successModal" aria-hidden="true">
+<div class="modal-card">
+<h2>¡Crucigrama completado!</h2>
+<p class="success" id="successText"></p>
+<button class="hint-btn" id="successClose" style="margin-top:12px;">Seguir jugando</button>
+</div>
+</div>
+
+<script>
+const layouts = {
+easy: {
+size: 13,
+label: 'Dificultad fácil',
+placements: [
+{ word: 'CONFIANZA', row: 6, col: 3, dir: 'across', clue: 'Etapa 1: base para el vínculo seguro con el cuidador.' },
+{ word: 'AUTONOMIA', row: 7, col: 2, dir: 'across', clue: 'Etapa 2: independencia frente a vergüenza o duda.' },
+{ word: 'INICIATIVA', row: 8, col: 2, dir: 'across', clue: 'Etapa 3: impulso de actuar y planear sin culpa excesiva.' },
+{ word: 'INDUSTRIA', row: 9, col: 3, dir: 'across', clue: 'Etapa 4: sentirse competente frente a la inferioridad.' },
+{ word: 'IDENTIDAD', row: 10, col: 4, dir: 'across', clue: 'Etapa 5: búsqueda de quién soy frente a confusión de roles.' },
+{ word: 'INTIMIDAD', row: 4, col: 8, dir: 'down', clue: 'Etapa 6: vínculos cercanos frente al aislamiento.' }
+]
+},
+medium: {
+size: 15,
+label: 'Dificultad media',
+placements: [
+{ word: 'CONFIANZA', row: 7, col: 3, dir: 'across', clue: 'Etapa 1: base para el vínculo seguro con el cuidador.' },
+{ word: 'INDUSTRIA', row: 6, col: 2, dir: 'across', clue: 'Etapa 4: sentirse competente frente a la inferioridad.' },
+{ word: 'INICIATIVA', row: 8, col: 2, dir: 'across', clue: 'Etapa 3: impulso de actuar y planear sin culpa excesiva.' },
+{ word: 'AUTONOMIA', row: 9, col: 1, dir: 'across', clue: 'Etapa 2: independencia frente a vergüenza o duda.' },
+{ word: 'IDENTIDAD', row: 11, col: 3, dir: 'across', clue: 'Etapa 5: búsqueda de quién soy frente a confusión de roles.' },
+{ word: 'INTIMIDAD', row: 12, col: 2, dir: 'across', clue: 'Etapa 6: vínculos cercanos frente al aislamiento.' },
+{ word: 'GENERATIVIDAD', row: 2, col: 8, dir: 'down', clue: 'Etapa 7: aportar y cuidar frente al estancamiento.' },
+{ word: 'INTEGRIDAD', row: 3, col: 12, dir: 'down', clue: 'Etapa 8: aceptación de la vida frente a desesperación.' }
+]
+},
+hard: {
+size: 17,
+label: 'Dificultad difícil',
+placements: [
+{ word: 'DESCONFIANZA', row: 1, col: 1, dir: 'across', clue: 'Opuesto de confianza en la etapa 1.' },
+{ word: 'VERGUENZA', row: 3, col: 1, dir: 'across', clue: 'Parte negativa de la etapa 2.' },
+{ word: 'INFERIORIDAD', row: 5, col: 1, dir: 'across', clue: 'Sensación que se enfrenta en la etapa 4.' },
+{ word: 'INDUSTRIA', row: 7, col: 2, dir: 'across', clue: 'Etapa 4: sentirse competente frente a la inferioridad.' },
+{ word: 'CONFIANZA', row: 9, col: 2, dir: 'across', clue: 'Etapa 1: base para el vínculo seguro con el cuidador.' },
+{ word: 'AUTONOMIA', row: 10, col: 2, dir: 'across', clue: 'Etapa 2: independencia frente a vergüenza o duda.' },
+{ word: 'INICIATIVA', row: 11, col: 2, dir: 'across', clue: 'Etapa 3: impulso de actuar y planear sin culpa excesiva.' },
+{ word: 'IDENTIDAD', row: 12, col: 2, dir: 'across', clue: 'Etapa 5: búsqueda de quién soy frente a confusión de roles.' },
+{ word: 'INTIMIDAD', row: 13, col: 2, dir: 'across', clue: 'Etapa 6: vínculos cercanos frente al aislamiento.' },
+{ word: 'ESTANCAMIENTO', row: 15, col: 1, dir: 'across', clue: 'Parte negativa de la etapa 7.' },
+{ word: 'DESESPERACION', row: 16, col: 1, dir: 'across', clue: 'Parte negativa de la etapa 8.' },
+{ word: 'CONFUSION', row: 2, col: 13, dir: 'down', clue: 'Parte negativa de la etapa 5.' },
+{ word: 'CULPA', row: 2, col: 14, dir: 'down', clue: 'Riesgo de la etapa 3 cuando el impulso se frena.' },
+{ word: 'GENERATIVIDAD', row: 2, col: 15, dir: 'down', clue: 'Etapa 7: aportar y cuidar frente al estancamiento.' },
+{ word: 'AISLAMIENTO', row: 5, col: 16, dir: 'down', clue: 'Riesgo en la etapa 6.' },
+{ word: 'INTEGRIDAD', row: 7, col: 17, dir: 'down', clue: 'Etapa 8: aceptación de la vida frente a desesperación.' }
+]
+}
+};
+
+let gridSize = 15;
+let placements = layouts.medium.placements;
+const grid = document.getElementById('grid');
+const acrossClues = document.getElementById('acrossClues');
+const downClues = document.getElementById('downClues');
+const hintModal = document.getElementById('hintModal');
+const successModal = document.getElementById('successModal');
+const timerEl = document.getElementById('timer');
+const statusEl = document.getElementById('status');
+const successText = document.getElementById('successText');
+const wordCountEl = document.getElementById('wordCount');
+const difficultyLabel = document.getElementById('difficultyLabel');
+const startBtn = document.getElementById('startBtn');
+
+let cellMap = new Map();
+
+function key(r, c) { return `${r}-${c}`; }
+
+function placeWords() {
+cellMap = new Map();
+placements.forEach((p) => {
+for (let i = 0; i < p.word.length; i++) {
+const r = p.dir === 'across' ? p.row : p.row + i;
+const c = p.dir === 'across' ? p.col + i : p.col;
+const k = key(r, c);
+const letter = p.word[i];
+if (cellMap.has(k) && cellMap.get(k).letter !== letter) {
+return;
+}
+cellMap.set(k, { row: r, col: c, letter });
+}
+});
+}
+
+function setGridSizing() {
+const width = Math.min(window.innerWidth - 100, 700);
+const sizePx = Math.max(22, Math.floor(width / gridSize) - 1);
+grid.style.gridTemplateColumns = `repeat(${gridSize}, ${sizePx}px)`;
+grid.style.gridAutoRows = `${sizePx}px`;
+}
+
+function buildGrid() {
+grid.innerHTML = '';
+setGridSizing();
+for (let r = 1; r <= gridSize; r++) {
+for (let c = 1; c <= gridSize; c++) {
+const k = key(r, c);
+if (!cellMap.has(k)) {
+const block = document.createElement('div');
+block.className = 'blocked';
+grid.appendChild(block);
+continue;
+}
+const cell = document.createElement('div');
+const variant = (r + c) % 3;
+cell.className = `cell variant-${variant === 0 ? 3 : variant}`;
+cell.dataset.row = r;
+cell.dataset.col = c;
+
+const num = document.createElement('span');
+num.className = 'num';
+cell.appendChild(num);
+
+const input = document.createElement('input');
+input.setAttribute('maxlength', '1');
+input.setAttribute('aria-label', `Fila ${r}, columna ${c}`);
+input.dataset.solution = cellMap.get(k).letter;
+cell.appendChild(input);
+grid.appendChild(cell);
+}
+}
+}
+
+function getCell(r, c) {
+return grid.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+}
+
+function assignNumbers() {
+let number = 1;
+const across = [];
+const down = [];
+const startNumbers = new Map();
+
+placements.forEach((p) => {
+const startKey = key(p.row, p.col);
+if (!startNumbers.has(startKey)) {
+startNumbers.set(startKey, number);
+const cell = getCell(p.row, p.col);
+if (cell) cell.querySelector('.num').textContent = number;
+number++;
+}
+const clueNumber = startNumbers.get(startKey);
+if (p.dir === 'across') {
+across.push({ number: clueNumber, clue: p.clue, answer: p.word });
+} else {
+down.push({ number: clueNumber, clue: p.clue, answer: p.word });
+}
+});
+
+renderClues(across, down);
+}
+
+function renderClues(across, down) {
+acrossClues.innerHTML = '';
+downClues.innerHTML = '';
+across.forEach(item => {
+const li = document.createElement('li');
+li.textContent = `${item.number}. ${item.clue}`;
+acrossClues.appendChild(li);
+});
+down.forEach(item => {
+const li = document.createElement('li');
+li.textContent = `${item.number}. ${item.clue}`;
+downClues.appendChild(li);
+});
+}
+
+function setupInputs() {
+const inputs = grid.querySelectorAll('input');
+inputs.forEach((input) => {
+input.addEventListener('input', (e) => {
+const value = e.target.value.toUpperCase();
+e.target.value = value.replace(/[^A-ZÑ]/g, '').slice(0, 1);
+startTimer();
+moveNext(e.target);
+});
+input.addEventListener('focus', () => startTimer());
+});
+}
+
+function moveNext(current) {
+const cell = current.parentElement;
+const r = Number(cell.dataset.row);
+const c = Number(cell.dataset.col);
+const candidates = [
+getCell(r, c + 1),
+getCell(r + 1, c),
+getCell(r, c - 1),
+getCell(r - 1, c)
+].filter(Boolean);
+if (candidates.length) {
+const nextInput = candidates[0].querySelector('input');
+if (nextInput) nextInput.focus();
+}
+}
+
+function setInputsEnabled(enabled) {
+const inputs = grid.querySelectorAll('input');
+inputs.forEach((input) => {
+input.disabled = !enabled;
+});
+}
+
+function checkAnswers() {
+let allCorrect = true;
+const inputs = grid.querySelectorAll('input');
+inputs.forEach((input) => {
+const cell = input.parentElement;
+const expected = input.dataset.solution;
+const actual = input.value.toUpperCase();
+cell.classList.remove('correct', 'incorrect');
+if (!actual) {
+allCorrect = false;
+return;
+}
+if (actual === expected) {
+cell.classList.add('correct');
+} else {
+cell.classList.add('incorrect');
+allCorrect = false;
+}
+});
+
+if (allCorrect) {
+stopTimer();
+successText.textContent = `Tiempo final: ${timerEl.textContent}`;
+successModal.classList.add('active');
+statusEl.textContent = '¡Excelente! Crucigrama completo.';
+} else {
+statusEl.textContent = 'Aún hay respuestas por corregir.';
+}
+}
+
+function resetGame() {
+const inputs = grid.querySelectorAll('input');
+inputs.forEach((input) => {
+input.value = '';
+input.parentElement.classList.remove('correct', 'incorrect');
+});
+stopTimer(true);
+statusEl.textContent = '';
+successModal.classList.remove('active');
+setInputsEnabled(false);
+}
+
+let timerId = null;
+let startAt = null;
+
+function formatTime(ms) {
+const total = Math.floor(ms / 1000);
+const min = String(Math.floor(total / 60)).padStart(2, '0');
+const sec = String(total % 60).padStart(2, '0');
+return `${min}:${sec}`;
+}
+
+function startTimer() {
+if (timerId) return;
+startAt = Date.now();
+timerEl.textContent = '00:00';
+timerId = setInterval(() => {
+timerEl.textContent = formatTime(Date.now() - startAt);
+}, 500);
+}
+
+function stopTimer(reset = false) {
+if (timerId) clearInterval(timerId);
+timerId = null;
+if (reset) {
+startAt = null;
+timerEl.textContent = '00:00';
+}
+}
+
+document.getElementById('hintBtn').addEventListener('click', () => {
+hintModal.classList.add('active');
+});
+
+document.getElementById('closeHints').addEventListener('click', () => {
+hintModal.classList.remove('active');
+});
+
+document.getElementById('checkBtn').addEventListener('click', checkAnswers);
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+startBtn.addEventListener('click', () => {
+setInputsEnabled(true);
+statusEl.textContent = 'Juego iniciado. ¡A completar el crucigrama!';
+startTimer();
+const firstInput = grid.querySelector('input');
+if (firstInput) firstInput.focus();
+});
+
+document.getElementById('successClose').addEventListener('click', () => {
+successModal.classList.remove('active');
+});
+
+function loadDifficulty(level) {
+const config = layouts[level];
+gridSize = config.size;
+placements = config.placements;
+difficultyLabel.textContent = config.label;
+wordCountEl.textContent = `${placements.length} palabras`;
+placeWords();
+buildGrid();
+assignNumbers();
+setupInputs();
+resetGame();
+}
+
+document.getElementById('difficulty').addEventListener('change', (e) => {
+loadDifficulty(e.target.value);
+});
+
+loadDifficulty('medium');
+window.addEventListener('resize', setGridSizing);
+</script>
+<a href="../#herramientas" style="position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:#1F3864;color:#fff;font:700 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;padding:10px 14px;border-radius:10px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25)">← Tecnocente</a>
+</body>
+</html>
