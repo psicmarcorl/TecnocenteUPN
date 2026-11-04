@@ -1,194 +1,35 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-root="">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tecnocente · UPN 112</title>
-<meta name="description" content="Espacio docente de Marco Antonio Rojas López: herramientas digitales, clases y recursos para estudiantes de la UPN Unidad 112 Celaya.">
+<meta name="description" content="Espacio docente de Marco Antonio Rojas López: herramientas digitales, clases y recursos para estudiantes.">
 <meta name="theme-color" content="#1F3864">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
-<style>
-/* Layout: hoja de cuaderno de cuadrícula; portada con herramienta viva a la derecha, luego bandas apiladas (herramientas, clases, horario, pausa) */
-:root{
-  --paper:#F6F8FC; --grid:rgba(31,56,100,.075); --surface:#FFFFFF; --line:#D8DFEB;
-  --ink:#14213D; --ink-soft:#4B5873; --navy:#1F3864; --on-navy:#FFFFFF;
-  --marker:#FFD23F; --tag:#E8EEF8; --ok:#1E7A4E; --gold:#E3B23C; --gold-ink:#2B1E00;
-  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --r:14px; --max:1120px;
-}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --paper:#0D1425; --grid:rgba(150,178,235,.07); --surface:#151F38; --line:#2A3657;
-  --ink:#E7ECF6; --ink-soft:#A4B0C7; --navy:#93B3F2; --on-navy:#0D1425;
-  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; --gold:#D9A93A; --gold-ink:#1A1200; color-scheme:dark; } }
-:root[data-theme="dark"]{
-  --paper:#0D1425; --grid:rgba(150,178,235,.07); --surface:#151F38; --line:#2A3657;
-  --ink:#E7ECF6; --ink-soft:#A4B0C7; --navy:#93B3F2; --on-navy:#0D1425;
-  --marker:#F2C94C; --tag:#1F2B4A; --ok:#5CC98F; --gold:#D9A93A; --gold-ink:#1A1200; color-scheme:dark; }
-
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-body{
-  background-color:var(--paper); color:var(--ink); font-family:var(--f-body); font-size:17px; line-height:1.55;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:26px 26px;
-}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
-a{color:var(--navy)}
-:focus-visible{outline:3px solid var(--marker);outline-offset:2px;border-radius:6px}
-.wrap{max-width:var(--max);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1;letter-spacing:-.01em}
-h2{font-size:clamp(1.7rem,3.2vw,2.3rem);font-weight:800}
-h3{font-size:1.15rem;font-weight:600}
-p{margin:0}
-.eyebrow{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
-.mark{text-decoration:underline;text-decoration-color:var(--marker);text-decoration-thickness:.32em;text-underline-offset:-.08em;text-decoration-skip-ink:none}
-
-/* Encabezado */
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
-.bar{display:flex;align-items:center;gap:16px;min-height:64px}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:800;font-size:1.25rem}
-.logo i{width:32px;height:32px;border-radius:8px;background:var(--navy);display:grid;place-items:center}
-.logo i svg{width:18px;height:18px}
-nav.main{margin-left:auto;display:flex;gap:4px}
-nav.main a{color:var(--ink);text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:700;font-size:.95rem}
-nav.main a:hover{background:var(--tag)}
-.iconbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer}
-.iconbtn svg{width:20px;height:20px}
-#menuBtn{display:none}
-@media (max-width:760px){
-  #menuBtn{display:grid;margin-left:auto}
-  nav.main{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;background:var(--surface);border-bottom:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
-  nav.main.open{display:flex}
-  nav.main a{padding:12px}
-}
-
-/* Portada */
-.hero{padding-block:56px 48px}
-.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
-.hero h1{font-size:clamp(2.9rem,8vw,5.4rem);font-weight:800;margin:10px 0 16px}
-.hero .lead{font-size:1.2rem;color:var(--ink-soft);max-width:34ch}
-.ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
-.btn{display:inline-flex;align-items:center;gap:8px;font:700 1rem var(--f-body);padding:12px 18px;border-radius:10px;border:2px solid var(--navy);text-decoration:none;cursor:pointer}
-.btn.solid{background:var(--navy);color:var(--on-navy)}
-.btn.ghost{background:transparent;color:var(--navy)}
-.btn:hover{transform:translateY(-1px)}
-@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}.hero{padding-block:36px}}
-
-/* Herramienta viva */
-.picker{background:var(--surface);border:2px solid var(--ink);border-radius:var(--r);box-shadow:6px 6px 0 var(--navy);padding:20px;min-width:0}
-.picker header{all:unset;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.picker label{display:block;font-weight:700;margin:14px 0 6px;font-size:.95rem}
-.picker textarea{width:100%;height:118px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:1rem/1.45 var(--f-body);background:var(--paper);color:var(--ink)}
-.picker .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.result{margin-top:14px;border:2px dashed var(--line);border-radius:10px;min-height:68px;display:grid;place-items:center;text-align:center;padding:10px;font-family:var(--f-display);font-weight:800;font-size:1.6rem}
-.result.win{border-color:var(--marker);border-style:solid}
-.count{font-family:var(--f-mono);font-size:.8rem;color:var(--ink-soft)}
-.ejemplo{font-family:var(--f-mono);font-size:.72rem;background:var(--tag);padding:3px 8px;border-radius:99px;color:var(--ink-soft)}
-
-/* Secciones */
-section.band{padding-block:56px}
-.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px;margin-bottom:24px}
-.head p{color:var(--ink-soft);max-width:52ch;margin-top:8px}
-.tools-ctrl{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
-.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:0 12px;max-width:420px}
-.search svg{width:18px;height:18px;color:var(--ink-soft);flex:none}
-.search input{border:0;background:transparent;font:1rem var(--f-body);color:var(--ink);padding:11px 0;width:100%;min-width:0}
-.search input:focus{outline:none}
-.search:focus-within{outline:3px solid var(--marker)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:700 .9rem var(--f-body);padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.tool{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .15s,border-color .15s}
-.tool:hover{transform:translateY(-3px);border-color:var(--navy)}
-.tool .ic{width:44px;height:44px;border-radius:10px;background:var(--tag);display:grid;place-items:center;color:var(--navy)}
-.tool .ic svg{width:24px;height:24px}
-.tool p{color:var(--ink-soft);font-size:.95rem;flex:1}
-.tool .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
-.open{font:700 .9rem var(--f-body);color:var(--navy);background:none;border:0;cursor:pointer;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
-.empty{padding:24px;text-align:center;color:var(--ink-soft);border:1px dashed var(--line);border-radius:var(--r)}
-
-/* Clases */
-.classes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-.class{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.class .top{background:var(--navy);color:var(--on-navy);padding:18px 20px}
-.class .top .eyebrow{color:inherit;opacity:.8}
-.class .top h3{font-size:1.3rem;margin-top:6px}
-.class ul{list-style:none;margin:0;padding:8px 20px 20px;display:flex;flex-direction:column}
-.class li{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
-.class li:last-child{border-bottom:0}
-.class li span:last-child{font-family:var(--f-mono);font-size:.75rem;color:var(--ink-soft);white-space:nowrap}
-.class .soon{padding:20px;color:var(--ink-soft)}
-.class .top.ug{background:var(--gold);color:var(--gold-ink)}
-.class .top .prog{font-size:.9rem;margin-top:6px;opacity:.9}
-.class li a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
-.class li a:hover{text-decoration-color:var(--navy)}
-.class-ctrl{margin-bottom:20px}
-.calframe{width:100%;height:380px;border:1px solid var(--line);border-radius:10px;margin-top:14px;background:var(--paper)}
-a.open{display:inline-block}
-.pill{display:inline-block;font-family:var(--f-mono);font-size:.72rem;padding:3px 9px;border-radius:99px;border:1px solid currentColor}
-
-/* Horario */
-.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media (max-width:820px){.two{grid-template-columns:1fr}}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;min-width:0}
-.week{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px}
-.day{border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center;min-height:96px;display:flex;flex-direction:column;gap:6px;align-items:center}
-.day b{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
-.day .slot{background:var(--navy);color:var(--on-navy);border-radius:6px;font-size:.78rem;font-weight:700;padding:4px 6px;font-variant-numeric:tabular-nums;line-height:1.25}
-.day.today{border:2px solid var(--marker)}
-.day.today b::after{content:" · hoy"}
-.cal{margin-top:14px;border:1px dashed var(--line);border-radius:10px;padding:18px;color:var(--ink-soft);font-size:.95rem}
-
-/* Pausa */
-.pause{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:center}
-@media (max-width:700px){.pause{grid-template-columns:1fr;justify-items:center;text-align:center}}
-.breath{width:220px;height:220px;max-width:100%;border-radius:50%;display:grid;place-items:center;position:relative;margin-bottom:34px}
-.breath .ring{position:absolute;inset:0;border-radius:50%;border:2px dashed var(--line)}
-.breath .dot{width:46%;height:46%;border-radius:50%;background:var(--navy);transition:transform 4s ease-in-out;display:grid;place-items:center;color:var(--on-navy);font-family:var(--f-display);font-weight:800;font-size:1.8rem}
-.breath .lbl{position:absolute;bottom:-34px;left:0;right:0;text-align:center;font-weight:700}
-.pause p{color:var(--ink-soft);max-width:48ch;margin:10px 0 18px}
-
-footer{border-top:1px solid var(--line);background:var(--surface);padding-block:28px;margin-top:40px}
-footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center}
-.mail{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.mail code{font-family:var(--f-mono);font-size:.9rem;user-select:all;overflow-wrap:anywhere}
-.small{font-size:.85rem;color:var(--ink-soft)}
-
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:10px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;max-width:calc(100% - 32px);text-align:center;z-index:30}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-
-:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0}
-img{max-width:100%}
-[hidden]{display:none!important}
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
 <header>
   <div class="wrap bar">
-    <a class="logo" href="#inicio" aria-label="Tecnocente, inicio">
+    <a class="logo" href="./" aria-label="Tecnocente, inicio">
       <i><svg viewBox="0 0 24 24" fill="none" stroke="var(--on-navy)" stroke-width="2.4" stroke-linecap="round"><path d="M5 6h14M12 6v13"/></svg></i>
       Tecnocente
     </a>
     <button class="iconbtn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="mainNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="main" id="mainNav" aria-label="Principal">
-      <a href="#herramientas">Herramientas</a>
-      <a href="#clases">Clases</a>
-      <a href="#horario">Horario</a>
-      <a href="#pausa">Relájate</a>
+      <a href="herramientas.html">Herramientas</a>
+      <a href="clases/">Clases</a>
+      <a href="horario.html">Horario</a>
+      <a href="relajate.html">Relájate</a>
     </nav>
     <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema claro u oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
   </div>
 </header>
 
-<main id="inicio">
+<main>
   <section class="hero">
     <div class="wrap">
       <div>
@@ -196,8 +37,8 @@ img{max-width:100%}
         <h1><span class="mark">Tecno</span>cente</h1>
         <p class="lead">Espacio para la docencia, el conocimiento y las herramientas digitales de mis clases.</p>
         <div class="ctas">
-          <a class="btn solid" href="#herramientas">Ver herramientas</a>
-          <a class="btn ghost" href="#clases">Ir a mi materia</a>
+          <a class="btn solid" href="herramientas.html">Ver herramientas</a>
+          <a class="btn ghost" href="clases/">Ir a mi materia</a>
         </div>
       </div>
 
@@ -220,64 +61,13 @@ Carlos Díaz</textarea>
     </div>
   </section>
 
-  <section class="band" id="herramientas">
+  <section class="band tight" aria-label="Secciones del sitio">
     <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="eyebrow">Para usar en clase</span>
-          <h2>Herramientas</h2>
-          <p>Sorteos, juegos y trivias que funcionan en celular, tableta o proyector.</p>
-        </div>
-      </div>
-      <div class="tools-ctrl">
-        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar herramienta" aria-label="Buscar herramienta"></div>
-        <div class="chips" role="group" aria-label="Filtrar por tipo" id="chips"></div>
-      </div>
-      <div class="grid" id="tools"></div>
-    </div>
-  </section>
-
-  <section class="band" id="clases">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="eyebrow">Por materia</span>
-          <h2>Clases</h2>
-          <p>Busca tu materia y entra directo a sus actividades.</p>
-        </div>
-      </div>
-      <div class="chips class-ctrl" role="group" aria-label="Filtrar materias" id="classChips"></div>
-      <div class="classes" id="classList"></div>
-    </div>
-  </section>
-
-  <section class="band" id="horario">
-    <div class="wrap">
-      <div class="head"><div><span class="eyebrow">Organízate</span><h2>Horario y fechas</h2></div></div>
-      <div>
-        <div class="panel">
-          <h3>Esta semana</h3>
-          <div class="week" id="week"></div>
-          <iframe class="calframe" title="Calendario de la clase" loading="lazy" src="https://calendar.google.com/calendar/embed?src=c_classroom5063ffc0%40group.calendar.google.com&amp;ctz=America%2FMexico_City&amp;mode=AGENDA&amp;showPrint=0&amp;showTz=0&amp;showCalendars=0&amp;showTitle=0"></iframe>
-          <p class="small" style="margin-top:8px">Si no ves las fechas, inicia sesión con tu cuenta institucional de Google. · <a href="https://www.google.com/maps/search/?api=1&amp;query=20.536923,-100.808851" target="_blank" rel="noopener">Cómo llegar a la UPN 112</a></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" id="pausa">
-    <div class="wrap">
-      <div class="panel pause">
-        <div class="breath" aria-hidden="true"><div class="ring"></div><div class="dot" id="dot">4</div><div class="lbl" id="blbl">Listo</div></div>
-        <div>
-          <span class="eyebrow">Relájate</span>
-          <h2>Pausa de un minuto</h2>
-          <p>Antes de un examen o después de una clase pesada: inhala 4 segundos, sostén 4 y exhala 6. Repite cinco ciclos.</p>
-          <div class="ctas" style="margin-top:0">
-            <button class="btn solid" id="breathBtn" type="button">Empezar respiración</button>
-            <a class="btn ghost" href="https://www.youtube.com/results?search_query=morning+jazz+snoopy" target="_blank" rel="noopener">Música para concentrarte</a>
-          </div>
-        </div>
+      <div class="quick">
+        <a class="qcard" href="herramientas.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div><h3>Herramientas</h3><p>Sorteos, juegos y trivias para usar en clase.</p><span class="stat" id="statTools"></span><span class="go">Abrir →</span></a>
+        <a class="qcard" href="clases/"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h11a3 3 0 013 3v11H7a3 3 0 01-3-3z"/><path d="M8 9h6M8 13h6"/></svg></div><h3>Clases</h3><p>Entra a tu materia y encuentra sus actividades.</p><span class="stat" id="statClasses"></span><span class="go">Abrir →</span></a>
+        <a class="qcard" href="horario.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><h3>Horario</h3><p>Días de clase y calendario de entregas.</p><span class="stat" id="statNext"></span><span class="go">Abrir →</span></a>
+        <a class="qcard" href="relajate.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-5-3-8-6.5-8-10.5A4.5 4.5 0 0112 7a4.5 4.5 0 018 3.5c0 4-3 7.5-8 10.5z"/></svg></div><h3>Relájate</h3><p>Una pausa de respiración de un minuto.</p><span class="stat">1 minuto</span><span class="go">Abrir →</span></a>
       </div>
     </div>
   </section>
@@ -290,127 +80,7 @@ Carlos Díaz</textarea>
   </div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
-
-<script>
-(function(){
-  const $=s=>document.querySelector(s);
-  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-  const toast=(t)=>{const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200)};
-
-  // Tema
-  const saved=store.get('tema'); if(saved) document.documentElement.setAttribute('data-theme',saved);
-  $('#themeBtn').addEventListener('click',()=>{
-    const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
-    const next=cur==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',next); store.set('tema',next);
-  });
-
-  // Menú móvil
-  const nav=$('#mainNav'),mb=$('#menuBtn');
-  mb.addEventListener('click',()=>{const o=nav.classList.toggle('open');mb.setAttribute('aria-expanded',o)});
-  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');mb.setAttribute('aria-expanded','false')}));
-
-  // Selector al azar
-  let used=[];
-  const list=()=>$('#names').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const upd=()=>{const n=list();const rest=n.filter(x=>!used.includes(x));$('#left').textContent=$('#noRepeat').checked?`${rest.length} de ${n.length} por participar`:`${n.length} en la lista`};
-  $('#names').addEventListener('input',()=>{used=[];upd()}); $('#noRepeat').addEventListener('change',()=>{used=[];upd()}); upd();
-  $('#pickBtn').addEventListener('click',()=>{
-    const n=list(); if(!n.length){$('#result').textContent='Escribe al menos un nombre';return}
-    let pool=$('#noRepeat').checked?n.filter(x=>!used.includes(x)):n;
-    if(!pool.length){used=[];pool=n;toast('Ya participaron todos. Empezamos de nuevo.')}
-    const r=$('#result'),btn=$('#pickBtn'); btn.disabled=true; r.classList.remove('win');
-    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; let i=0;const steps=reduce?1:14;
-    const tick=()=>{r.textContent=pool[Math.floor(Math.random()*pool.length)];i++;
-      if(i<steps) setTimeout(tick,40+i*12); else{const w=pool[Math.floor(Math.random()*pool.length)];r.textContent=w;r.classList.add('win');if($('#noRepeat').checked)used.push(w);upd();btn.disabled=false}};
-    tick();
-  });
-
-  // Herramientas
-  const I={
-    team:'<path d="M8 11a3 3 0 100-6 3 3 0 000 6zM16 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15.5c3 0 8 1 8 4.5"/>',
-    wheel:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/>',
-    flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
-    cards:'<rect x="3" y="6" width="8" height="12" rx="1.5"/><rect x="13" y="6" width="8" height="12" rx="1.5"/><path d="M7 10v4M17 10v4"/>',
-    drag:'<path d="M9 3h6v6H9zM4 15h6v6H4zM14 15h6v6h-6zM12 9v3M7 15v-1.5h10V15"/>',
-    quiz:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .6-1.5 1.1-1.5 2.2M12 17h.01"/>',
-    grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
-    cloud:'<path d="M7 18a4 4 0 01-.5-8 6 6 0 0111.5 1.5A3.5 3.5 0 0117.5 18z"/>',
-    ticket:'<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M13 6v12" stroke-dasharray="2 2"/>'
-  };
-  const tools=[
-    {n:'Generador de equipos',h:'herramientas/generador-equipos.html',d:'Pega la lista del grupo y forma equipos aleatorios en un clic.',t:'Sorteos y equipos',i:'team'},
-    {n:'Ruleta de selección',h:'herramientas/ruleta.html',d:'Gira la ruleta para elegir quién participa o qué tema sigue.',t:'Sorteos y equipos',i:'wheel'},
-    {n:'Carrera de números',h:'herramientas/carrera-numeros.html',d:'Hasta 10 autos compiten; en 10 segundos sabes el orden de exposición.',t:'Sorteos y equipos',i:'flag'},
-    {n:'Memorama de Pedagogía',h:'herramientas/memorama-pedagogia.html',d:'Encuentra los pares de conceptos y autores.',t:'Juegos',i:'cards'},
-    {n:'Cada animal a su hogar',h:'herramientas/granja.html',d:'Arrastra cada animal a su lugar en la granja y valida tus respuestas.',t:'Juegos',i:'drag'},
-    {n:'Crucigrama de Erikson',h:'herramientas/crucigrama-erikson.html',d:'Las etapas psicosociales en un crucigrama jugable en celular.',t:'Juegos',i:'grid'},
-    {n:'Trivia: Explicar y comprender',h:'herramientas/trivia-explicar-comprender.html',d:'15 preguntas de investigación científica, con puntos extra por rapidez.',t:'Trivias',i:'quiz'},
-    {n:'Trivia de Erik Erikson',h:'herramientas/trivia-erikson.html',d:'20 preguntas de opción múltiple, verdadero o falso y relación de conceptos.',t:'Trivias',i:'quiz'},
-    {n:'Nube de Ideas',h:'https://psicmarcorl.github.io/Herramientas-didacticas/',d:'Cada alumno envía palabras y la nube crece en vivo en el proyector.',t:'Participación',i:'cloud'},
-    {n:'Boleto de salida',h:'https://psicmarcorl.github.io/Herramientas-didacticas/',d:'Al final de la clase, cada alumno deja su reflexión entrando por QR.',t:'Participación',i:'ticket'}
-  ];
-  const cats=['Todas',...new Set(tools.map(x=>x.t))]; let cat='Todas';
-  const chips=$('#chips');
-  cats.forEach(c=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=c;b.setAttribute('aria-pressed',c===cat);b.onclick=()=>{cat=c;chips.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.textContent===c));render()};chips.appendChild(b)});
-  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  function render(){
-    const q=norm($('#q').value.trim());
-    const list=tools.filter(x=>(cat==='Todas'||x.t===cat)&&(!q||norm(x.n+' '+x.d).includes(q)));
-    $('#tools').innerHTML=list.length?list.map(x=>`<article class="tool"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[x.i]}</svg></div><h3>${x.n}</h3><p>${x.d}</p><div class="meta"><span class="tag">${x.t}</span><a class="open" href="${x.h}"${/^https?:/.test(x.h)?' target="_blank" rel="noopener"':''}>Abrir</a></div></article>`).join(''):'<div class="empty">No encontré herramientas con ese nombre. Prueba con otra palabra.</div>';
-  }
-  $('#q').addEventListener('input',render); render();
-
-  // Clases
-  const H='herramientas/';
-  const classes=[
-    {n:'Procesos psicosociales del rendimiento académico',p:'Lic. en Psicología Educativa',u:'UPN',now:true,items:[]},
-    {n:'Cultura, comunicación y educación',p:'Lic. en Pedagogía · Lic. en Intervención Educativa',u:'UPN',now:true,items:[]},
-    {n:'Jóvenes, violencia y convivencialidad',p:'Lic. en Pedagogía',u:'UPN',now:true,items:[{t:'Feria por la eliminación de la violencia',m:'25 de noviembre'}]},
-    {n:'Interculturalidad, comunicación y educación',p:'Lic. en Intervención Educativa',u:'UPN',now:true,items:[]},
-    {n:'Teoría de la Medida',p:'Psicología Clínica',u:'UG',now:true,items:[]},
-    {n:'Tecnología Aplicada a la Psicología',p:'Psicología Clínica',u:'UG',now:true,items:[]},
-    {n:'Métodos cualitativos',p:'Semestre anterior',u:'UPN',now:false,items:[
-      {t:'Explicar y comprender · trivia',m:'15 preguntas',h:H+'trivia-explicar-comprender.html'},
-      {t:'SciELO',m:'buscador',h:'https://scielo.org/es/'},
-      {t:'Google Académico',m:'buscador',h:'https://scholar.google.com/'},
-      {t:'Consensus',m:'IA',h:'https://consensus.app/'},
-      {t:'Complemento de IA de Google Académico',m:'IA',h:'https://scholar.google.com/scholar_settings?sciifh=1&hl=es&as_sdt=0,5#4'}]},
-    {n:'Desarrollo, aprendizaje y educación',p:'Semestre anterior',u:'UPN',now:false,items:[
-      {t:'Crucigrama: etapas psicosociales de Erikson',m:'juego',h:H+'crucigrama-erikson.html'},
-      {t:'Trivia de Erik Erikson',m:'20 preguntas',h:H+'trivia-erikson.html'}]},
-    {n:'Comunicación en los procesos educativos',p:'Semestre anterior',u:'UPN',now:false,items:[]}
-  ];
-  const uni={UPN:'UPN Unidad 112',UG:'Universidad de Guanajuato'};
-  const cf=[['now','Este semestre'],['old','Semestres anteriores'],['all','Todas']]; let cv='now';
-  const cc=$('#classChips');
-  cf.forEach(([v,l])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=l;b.setAttribute('aria-pressed',v===cv);b.onclick=()=>{cv=v;cc.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));renderClasses()};cc.appendChild(b)});
-  const ext=h=>/^https?:/.test(h)?' target="_blank" rel="noopener"':'';
-  function renderClasses(){
-    const list=classes.filter(c=>cv==='all'||(cv==='now')===c.now);
-    $('#classList').innerHTML=list.map(c=>`<article class="class"><div class="top${c.u==='UG'?' ug':''}"><span class="eyebrow">${uni[c.u]}</span><h3>${c.n}</h3><p class="prog">${c.p}</p></div>${c.items.length?`<ul>${c.items.map(i=>`<li><span>${i.h?`<a href="${i.h}"${ext(i.h)}>${i.t}</a>`:i.t}</span><span>${i.m}</span></li>`).join('')}</ul>`:`<p class="soon"><span class="pill">en preparación</span><br><br>Pronto encontrarás aquí las actividades de esta materia.</p>`}</article>`).join('');
-  }
-  renderClasses();
-
-  // Semana
-  const days=['Lun','Mar','Mié','Jue','Vie'],slots={2:'9:00–11:00',4:'7:00–8:00'};
-  const today=new Date().getDay()-1;
-  $('#week').innerHTML=days.map((d,i)=>`<div class="day${i===today?' today':''}"><b>${d}</b>${slots[i]?`<span class="slot">${slots[i]}</span>`:''}</div>`).join('');
-
-  // Respiración
-  let run=false;
-  $('#breathBtn').addEventListener('click',async function(){
-    if(run){run=false;return}
-    run=true;this.textContent='Detener';const dot=$('#dot'),lbl=$('#blbl');
-    const phase=(txt,sec,scale)=>new Promise(res=>{lbl.textContent=txt;dot.style.transitionDuration=sec+'s';dot.style.transform=`scale(${scale})`;let s=sec;dot.textContent=s;
-      const iv=setInterval(()=>{if(!run){clearInterval(iv);res();return}s--;if(s>0)dot.textContent=s;else{clearInterval(iv);res()}},1000)});
-    for(let c=0;c<5&&run;c++){await phase('Inhala',4,1.9);if(!run)break;await phase('Sostén',4,1.9);if(!run)break;await phase('Exhala',6,1)}
-    run=false;this.textContent='Empezar respiración';dot.style.transform='scale(1)';dot.textContent='4';lbl.textContent='Listo';
-  });
-
-  // Correo
-  $('#copyBtn').addEventListener('click',()=>{const t=$('#mail').textContent;
-    navigator.clipboard.writeText(t).then(()=>toast('Correo copiado')).catch(()=>{const r=document.createRange();r.selectNodeContents($('#mail'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Correo seleccionado: cópialo con Ctrl+C')})});
-})();
-</script>
+<script src="assets/datos.js"></script>
+<script src="assets/sitio.js"></script>
 </body>
 </html>
